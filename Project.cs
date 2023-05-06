@@ -2,14 +2,12 @@
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-
 using DataObjects;
 using System.Windows.Forms;
-using System.Reflection;
 
 namespace Sterling_Lab
 {
-    public partial class Project : UserControl
+    public partial class Project : System.Windows.Forms.UserControl
     {
         private int agentID;
         private int clientID;
@@ -36,6 +34,7 @@ namespace Sterling_Lab
         private State state { get; set; }
 
         enum Task { Client, Date, Project, Open }
+        private string form_task;
         private Task current_task { get; set; }
         private Task previous_task { get; set; }
 
@@ -93,6 +92,7 @@ namespace Sterling_Lab
             if (IsDirty)
             {
                 current_task = Task.Project;
+                ConvertTaskToString(current_task);
                 UpdateProject(State.Save);
             }
         }
@@ -107,14 +107,40 @@ namespace Sterling_Lab
             UpdateProject(State.Cancel);
         }
 
-        private void cbxBillClient_CheckedChanged(object sender, EventArgs e)
+        private void btnSearch_Click(object sender, EventArgs e)
         {
+            UpdateProject(State.Navigate);
+        }
 
+        private void CheckBox_Click(object sender, EventArgs e)
+        {
+            if (IsPopulating) { return; }
+            try
+            {
+                ComboBox sendCombo = (ComboBox)sender;
+                foreach (Control ctl in gbxSearch.Controls)
+                {
+                    if (ctl.Name == sendCombo.Name)                    
+                        current_task = ConvertStringToTask(ctl.Name);
+                    else if (ctl is TextBox || ctl is DateTimePicker)
+                    { 
+                        ctl.Enabled = false;
+                    }
+                }
+            }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Clear Controls", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.IsDirty = (state == State.Edit);
+            }
         }
 
         private void ClearControls()
         {
-            if(state == State.Load) {return;}
             try
             {
                 foreach (GroupBox gbxctl in new GroupBox[] { gbxSearch, gbxProject, gbxBill_Client })
@@ -153,92 +179,6 @@ namespace Sterling_Lab
             }
         }
 
-        private void CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                if (IsPopulating)
-                {
-                    //cbxByClient.Checked = cbxByDate.Checked = cbxByOpenProject.Checked = false;
-                    return;
-                }
-
-                CheckBox checkBox = (CheckBox)sender;
-                switch (checkBox.Name)
-                {
-                    case "cbxByClient":
-                        if (cbxByClient.Checked)
-                        {
-                            this.clientID = dp.GetSelectedValue(cmbClient); // set the global
-                            lblBeg.Visible = false;
-                            lblEnd.Visible = false;
-                            dtpBeg.Visible = false;
-                            dtpEnd.Visible = false;
-                            this.current_task = Task.Client;
-                            this.previous_task = Task.Open;
-                            cbxByDate.Checked = cbxByOpenProject.Checked = !checkBox.Checked;
-                        }
-                        break;
-                    case "cbxByDate":
-                        if (cbxByDate.Checked)
-                        {
-                            dtpBeg.Visible = true;
-                            dtpEnd.Visible = true;
-                            lblBeg.Visible = true;
-                            lblEnd.Visible = true;
-                            cbxByClient.Checked = cbxByOpenProject.Checked = !checkBox.Checked;
-                            this.current_task = Task.Date;
-                            this.previous_task = Task.Open;
-                            break;
-                        }
-                        else
-                        {
-                            dtpBeg.Visible = false;
-                            dtpEnd.Visible = false;
-                            lblBeg.Visible = false;
-                            lblEnd.Visible = false;
-                        }
-                        break;
-                    case "cbxByOpenProject":
-                        if (cbxByOpenProject.Checked)
-                        {
-                            cbxByDate.Checked = cbxByClient.Checked = !checkBox.Checked;
-                            this.current_task = Task.Open;
-                            this.previous_task = Task.Client;
-                        }
-                        break;
-                        // for project cbxIs_Reported & cbxBill_Cust ...
-                    default:
-                        if(state == State.Edit)
-                        {
-                            IsDirty = true;
-                        }
-                        break;
-                }
-            }
-            catch (Exception x)
-            {
-                MessageBox.Show(x.Message, "Project Search", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            finally
-            {
-                this.IsPopulating = false;
-            }
-
-            if (state == State.Navigate)
-            {
-                UpdateProject(state, GetProjectSelectQuery(current_task));
-            }
-            else if (IsDirty) // set buttons (don't update project) yet
-            {
-                UpdateProject(State.Edit);
-            }
-            else  // set buttons (don't update project) yet
-            {
-                UpdateProject(State.Navigate);
-            }
-        }
-
         // set global and/or populate form
         private void Combo_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -254,7 +194,7 @@ namespace Sterling_Lab
                 {
                     case "client":
                         this.clientID = Convert.ToInt32(comboBox.SelectedValue);
-                        cbxByClient.Checked = true;
+                        cbxClient.Checked = true;
                         break;
                     case "agent":
                         this.agentID = Convert.ToInt32(comboBox.SelectedValue);
@@ -279,20 +219,24 @@ namespace Sterling_Lab
             if (name == "client")
             {
                 current_task = Task.Client;
+                ConvertTaskToString(current_task);
                 state = State.Navigate;
                 UpdateProject(state, GetProjectSelectQuery(current_task));
             }
             else if(state == State.Edit) // changes to other combos need saving 
             {
                 current_task = Task.Project;
+                ConvertTaskToString(current_task);
                 IsDirty = true;
-                UpdateState(state);
+                UpdateState(state); // Combo Selected Index Changed.
             }
         }
 
         // ensure valid IDs
         private void Combo_Validating(object sender, CancelEventArgs e)
         {
+            if (state != State.Edit)
+                return;
             ComboBox comboBox = (ComboBox)sender;
             string name = comboBox.Name.Remove(0, 3).ToLower();
             if (IsDirty && ((state == State.Edit || state == State.Save)))
@@ -333,6 +277,53 @@ namespace Sterling_Lab
             }
         }
 
+        private string ConvertTaskToString(Task task)
+        {
+            this.form_task = "";
+            switch (task)
+            {
+                case Task.Project:
+                    form_task = "Project";
+                    break;
+                case Task.Date:
+                    form_task = "Date";
+                    break;
+                case Task.Client:
+                    form_task = "Client";
+                    break;
+                case Task.Open:
+                    form_task = "Open";
+                    break;
+                default:
+                    break;
+            }
+            return form_task;
+        }
+
+        private Task ConvertStringToTask(string task)
+        {
+            string name = task.Substring(3);
+            Task tempTask = Task.Project;
+            switch (name)
+            {
+                case "Project":
+                    //alread initialized
+                    break;
+                case "Date":
+                    tempTask = Task.Date;
+                    break;
+                case "Client":
+                    tempTask = Task.Client;
+                    break;
+                case "Open":
+                    tempTask = Task.Open;
+                    break;
+                default:
+                    break;
+            }
+            return tempTask;
+        }
+
         private void DataControlsStatusChange()
         {
             foreach (Button btn in gbxDataControls.Controls)
@@ -354,8 +345,11 @@ namespace Sterling_Lab
             bs.Position = e.RowIndex; // sync binding source to gridrow
             if (projectID < 1)
                 this.projectID = Convert.ToInt32(dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString());
+
             current_task = Task.Project; // projects in dgv
+            ConvertTaskToString(current_task);
             previous_task = Task.Client;
+
             UpdateProject(State.Navigate);
         }
 
@@ -368,48 +362,40 @@ namespace Sterling_Lab
             //UpdateProject(this.state);
         }
 
-        private void dtpBeg_ValueChanged(object sender, EventArgs e)
-        {
-            if (state == State.Load)
-                return;
-            else if (state == State.Edit)
-            {
-                this.IsDirty = true;
-            }
-            UpdateProject(state);
-        }
 
-        private void dtpEnd_ValueChanged(object sender, EventArgs e)
+        private void DatePicker_ValueChanged(object sender, EventArgs e)
         {
-            if (state == State.Load)
+            if (state != State.Navigate)
                 return;
-            else if(state == State.Edit)
-            {
-                this.IsDirty = true;
+            bool IsValidTime = false;
+            if (state == State.Load)
+            return;
+            try
+            { 
+                DateTimePicker dtp = (DateTimePicker)sender;
+                switch(dtp.Name)
+                {
+                    case "dtpBeg":
+                    case "dtpEnd":
+                    default:
+                        IsValidTime = dp.IsDate(dtp.Value.ToString());
+                        break;
+                }
             }
-            UpdateProject(state);
-        }
+            catch(Exception x)
+            {
+                MessageBox.Show(x.Message,"DatePicker Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally 
+            {
+                if (state == State.Edit)                
+                    this.IsDirty = true;                
+            }
+            current_task = Task.Date;
+            ConvertTaskToString(current_task);
 
-        private void dtpProjectInitiated_ValueChanged(object sender, EventArgs e)
-        {
-            if (state == State.Load)
-                return;
-            else if (state == State.Edit)
-            {
-                this.IsDirty = true;
-            }
-            UpdateProject(state);
-        }
-
-        private void dtpReportExpected_ValueChanged(object sender, EventArgs e)
-        {
-            if (state == State.Load)
-                return;
-            else if(state == State.Edit)
-            {
-                this.IsDirty = true;
-            }
-            UpdateProject(state);
+            //if (IsValidTime)
+            //    UpdateProject(state);
         }
 
         private void GetAgentForClient(int clientid)
@@ -517,18 +503,19 @@ namespace Sterling_Lab
             if(state != State.Load) { return; }
             try
             {
-                //default search 
-                this.IsPopulating = true; // shut down control change events
-                current_task = Task.Open;
-                cbxByOpenProject.Checked = true;
-                
                 // time
                 dtpBeg.Value = DateTime.Now.SubtractBusinessDays(30);
                 dtpEnd.Value = DateTime.Now;
 
-                // controls
+                // combos
                 InitializeCombos(gbxSearch);
                 InitializeCombos(gbxProject);
+
+                //default search 
+                current_task = Task.Open;
+                ConvertTaskToString(current_task);
+                cbxOpen.Checked = true;
+
 
                 UpdateProject(State.Navigate);
             }
@@ -562,11 +549,11 @@ namespace Sterling_Lab
                  }
 
                 // datagridview 
-                dgvDisplay.ClearSelection();
                 this.currentRow = ut.SetRange(bs.Position,0,dgvDisplay.Rows.Count);
                 
                 //populate form controls
                 DataGridViewRow row = dgvDisplay.Rows[currentRow];
+                dgvDisplay.ClearSelection();
                 row.Selected = true;
                 
                 this.projectID = Convert.ToInt32(row.Cells["project_pk"].Value.ToString());
@@ -624,6 +611,7 @@ namespace Sterling_Lab
             else if(e.KeyChar == (char)Keys.Return) // enter key
             {
                 current_task = Task.Project;
+                ConvertTaskToString(current_task);
                 UpdateProject(State.Save);
             }
         }
@@ -636,6 +624,7 @@ namespace Sterling_Lab
                     if (IsDirty)
                     {
                         current_task = Task.Project;
+                        ConvertTaskToString(current_task);
                         UpdateProject(State.Save);
                     }
                     break;
@@ -671,10 +660,7 @@ namespace Sterling_Lab
                         state = State.Navigate;
                         break;
                     case State.Edit:
-                        query = GetProjectSelectQuery(current_task);
-                        break;
                     case State.Navigate:
-                        query = GetProjectSelectQuery(current_task);
                         break;
                     case State.Cancel:
                         ClearControls();
@@ -723,9 +709,10 @@ namespace Sterling_Lab
                             {
                                 MessageBox.Show("Project Saved!", "Form State", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                                 IsDirty = false;
-                                cbxByClient.Checked = cbxByDate.Checked = cbxByOpenProject.Checked = false;
+                                cbxClient.Checked = cbxDate.Checked = cbxOpen.Checked = false;
                                 status = State.Navigate;
                                 current_task = Task.Open;
+                                ConvertTaskToString(current_task);
                                 dgvDisplay.DataSource = null;
                             }
                             else
@@ -827,6 +814,11 @@ namespace Sterling_Lab
             lblDisplay.Text = "Project :: " + form_State;
             gbxNavControls.Enabled = (state == State.Navigate);
             DataControlsStatusChange();
+        }
+
+        private void cbxNumber_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
