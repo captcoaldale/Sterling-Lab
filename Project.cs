@@ -4,6 +4,10 @@ using System.Data;
 using System.Drawing;
 using DataObjects;
 using System.Windows.Forms;
+using System.Diagnostics.Eventing.Reader;
+using System.Diagnostics;
+using System.Linq;
+using Spire.Pdf.Exporting.XPS.Schema;
 
 namespace Sterling_Lab
 {
@@ -109,6 +113,7 @@ namespace Sterling_Lab
 
         private void btnSearch_Click(object sender, EventArgs e)
         {
+            dgvDisplay.Rows.Clear();
             UpdateProject(State.Navigate);
         }
 
@@ -117,24 +122,43 @@ namespace Sterling_Lab
             if (IsPopulating) { return; }
             try
             {
-                ComboBox sendCombo = (ComboBox)sender;
+                int count = 0;
+                CheckBox sendCheck = (CheckBox)sender;
                 foreach (Control ctl in gbxSearch.Controls)
                 {
-                    if (ctl.Name == sendCombo.Name)                    
-                        current_task = ConvertStringToTask(ctl.Name);
-                    else if (ctl is TextBox || ctl is DateTimePicker)
-                    { 
-                        ctl.Enabled = false;
+                    if (ctl.Name.Substring(3) == sendCheck.Name.Substring(3))
+                    {
+                        ctl.Enabled = true; // enable all ctrls w/ similar names
+                        switch (ctl.Name.Substring(0, 3))
+                        {
+                            case "cbx":
+                                CheckBox cbx = (CheckBox)ctl; // strange but this worsk (cannot declare new chbx after an if ... !
+                                if (cbx.Checked)
+                                {
+                                    current_task = ConvertStringToTask(ctl.Name);
+                                }
+                                else
+                                    cbx.Checked = false;
+                                break;
+                            default: break;
+                        }
+                    } // only disable entry controls (but not buttons and labels)
+                    else if (ctl is Label || ctl is Button)
+                    {
+                        ctl.Enabled = true;
                     }
+                    else
+                        ctl.Enabled = false;
+                    count++;
                 }
             }
-
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Clear Controls", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "CheckBox Click Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
+                // prepare for update
                 this.IsDirty = (state == State.Edit);
             }
         }
@@ -433,7 +457,7 @@ namespace Sterling_Lab
                     query += "client_fk = " + clientID + ";";
                     break;
                 case Task.Date:
-                    query += "date_initiated BETWEEN '" + dtpBeg.Value + "' AND '" + dtpEnd.Value + "'";
+                    query += "date_initiated BETWEEN '" + dtpBegDate.Value + "' AND '" + dtpEndDate.Value + "'";
                     break;
                 case Task.Open:
                     query += "is_reported = false;";
@@ -504,8 +528,8 @@ namespace Sterling_Lab
             try
             {
                 // time
-                dtpBeg.Value = DateTime.Now.SubtractBusinessDays(30);
-                dtpEnd.Value = DateTime.Now;
+                dtpBegDate.Value = DateTime.Now.SubtractBusinessDays(30);
+                dtpEndDate.Value = DateTime.Now;
 
                 // combos
                 InitializeCombos(gbxSearch);
@@ -516,6 +540,7 @@ namespace Sterling_Lab
                 ConvertTaskToString(current_task);
                 cbxOpen.Checked = true;
 
+                txtProject_Number.Text = "Enter Project Number";
 
                 UpdateProject(State.Navigate);
             }
@@ -819,6 +844,22 @@ namespace Sterling_Lab
         private void cbxNumber_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void txtProject_Number_Enter(object sender, EventArgs e)
+        {
+            if(txtProject_Number.Text.Length > 0)
+            {
+                txtProject_Number.Text = "";
+            }
+        }
+
+        private void txtProject_Number_Leave(object sender, EventArgs e)
+        {
+            if (txtProject_Number.Text.Trim() == "")
+            {
+                txtProject_Number.Text = "Enter Project Number";
+            }
         }
     }
 }

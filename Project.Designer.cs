@@ -50,7 +50,6 @@
             this.pnlProject = new System.Windows.Forms.Panel();
             this.lblDisplay = new System.Windows.Forms.Label();
             this.gbxSearch = new System.Windows.Forms.GroupBox();
-            this.lblNumber = new System.Windows.Forms.Label();
             this.txtProject_Number = new System.Windows.Forms.TextBox();
             this.btnSearch = new System.Windows.Forms.Button();
             this.cbxNumber = new System.Windows.Forms.CheckBox();
@@ -62,9 +61,9 @@
             this.lblClient = new System.Windows.Forms.Label();
             this.cmbClient = new System.Windows.Forms.ComboBox();
             this.lblEnd = new System.Windows.Forms.Label();
-            this.dtpEnd = new System.Windows.Forms.DateTimePicker();
+            this.dtpEndDate = new System.Windows.Forms.DateTimePicker();
             this.lblBeg = new System.Windows.Forms.Label();
-            this.dtpBeg = new System.Windows.Forms.DateTimePicker();
+            this.dtpBegDate = new System.Windows.Forms.DateTimePicker();
             this.dgvDisplay = new System.Windows.Forms.DataGridView();
             this.gbxDisplay = new System.Windows.Forms.GroupBox();
             this.gbxDataControls = new System.Windows.Forms.GroupBox();
@@ -300,7 +299,6 @@
             // 
             // gbxSearch
             // 
-            this.gbxSearch.Controls.Add(this.lblNumber);
             this.gbxSearch.Controls.Add(this.txtProject_Number);
             this.gbxSearch.Controls.Add(this.btnSearch);
             this.gbxSearch.Controls.Add(this.cbxNumber);
@@ -312,9 +310,9 @@
             this.gbxSearch.Controls.Add(this.lblClient);
             this.gbxSearch.Controls.Add(this.cmbClient);
             this.gbxSearch.Controls.Add(this.lblEnd);
-            this.gbxSearch.Controls.Add(this.dtpEnd);
+            this.gbxSearch.Controls.Add(this.dtpEndDate);
             this.gbxSearch.Controls.Add(this.lblBeg);
-            this.gbxSearch.Controls.Add(this.dtpBeg);
+            this.gbxSearch.Controls.Add(this.dtpBegDate);
             this.gbxSearch.Font = new System.Drawing.Font("Lucida Bright", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.gbxSearch.Location = new System.Drawing.Point(3, 85);
             this.gbxSearch.Name = "gbxSearch";
@@ -323,21 +321,14 @@
             this.gbxSearch.TabStop = false;
             this.gbxSearch.Text = "Search";
             // 
-            // lblNumber
-            // 
-            this.lblNumber.AutoSize = true;
-            this.lblNumber.Location = new System.Drawing.Point(15, 164);
-            this.lblNumber.Name = "lblNumber";
-            this.lblNumber.Size = new System.Drawing.Size(129, 20);
-            this.lblNumber.TabIndex = 44;
-            this.lblNumber.Text = "Project Number";
-            // 
             // txtProject_Number
             // 
-            this.txtProject_Number.Location = new System.Drawing.Point(163, 161);
+            this.txtProject_Number.Location = new System.Drawing.Point(66, 161);
             this.txtProject_Number.Name = "txtProject_Number";
-            this.txtProject_Number.Size = new System.Drawing.Size(181, 26);
+            this.txtProject_Number.Size = new System.Drawing.Size(205, 26);
             this.txtProject_Number.TabIndex = 43;
+            this.txtProject_Number.Enter += new System.EventHandler(this.txtProject_Number_Enter);
+            this.txtProject_Number.Leave += new System.EventHandler(this.txtProject_Number_Leave);
             // 
             // btnSearch
             // 
@@ -352,7 +343,6 @@
             // 
             // cbxNumber
             // 
-            this.cbxNumber.AutoCheck = false;
             this.cbxNumber.AutoSize = true;
             this.cbxNumber.Location = new System.Drawing.Point(466, 29);
             this.cbxNumber.Name = "cbxNumber";
@@ -360,7 +350,7 @@
             this.cbxNumber.TabIndex = 41;
             this.cbxNumber.Text = "By Number";
             this.cbxNumber.UseVisualStyleBackColor = true;
-            this.cbxNumber.CheckStateChanged += new System.EventHandler(this.Combo_SelectedIndexChanged);
+            this.cbxNumber.CheckStateChanged += new System.EventHandler(this.CheckBox_Click);
             // 
             // cmbAgent
             // 
@@ -373,7 +363,6 @@
             // 
             // cbxOpen
             // 
-            this.cbxOpen.AutoCheck = false;
             this.cbxOpen.AutoSize = true;
             this.cbxOpen.Location = new System.Drawing.Point(294, 29);
             this.cbxOpen.Name = "cbxOpen";
@@ -381,11 +370,10 @@
             this.cbxOpen.TabIndex = 4;
             this.cbxOpen.Text = "By Open Project";
             this.cbxOpen.UseVisualStyleBackColor = true;
-            this.cbxOpen.CheckStateChanged += new System.EventHandler(this.Combo_SelectedIndexChanged);
+            this.cbxOpen.CheckStateChanged += new System.EventHandler(this.CheckBox_Click);
             // 
             // cbxDate
             // 
-            this.cbxDate.AutoCheck = false;
             this.cbxDate.AutoSize = true;
             this.cbxDate.Location = new System.Drawing.Point(163, 29);
             this.cbxDate.Name = "cbxDate";
@@ -393,11 +381,10 @@
             this.cbxDate.TabIndex = 2;
             this.cbxDate.Text = "By Date";
             this.cbxDate.UseVisualStyleBackColor = true;
-            this.cbxDate.CheckStateChanged += new System.EventHandler(this.Combo_SelectedIndexChanged);
+            this.cbxDate.CheckStateChanged += new System.EventHandler(this.CheckBox_Click);
             // 
             // cbxClient
             // 
-            this.cbxClient.AutoCheck = false;
             this.cbxClient.AutoSize = true;
             this.cbxClient.Location = new System.Drawing.Point(38, 29);
             this.cbxClient.Name = "cbxClient";
@@ -405,7 +392,7 @@
             this.cbxClient.TabIndex = 2;
             this.cbxClient.Text = "By Client";
             this.cbxClient.UseVisualStyleBackColor = true;
-            this.cbxClient.CheckStateChanged += new System.EventHandler(this.Combo_SelectedIndexChanged);
+            this.cbxClient.CheckStateChanged += new System.EventHandler(this.CheckBox_Click);
             // 
             // lblAgent
             // 
@@ -444,14 +431,14 @@
             this.lblEnd.TabIndex = 34;
             this.lblEnd.Text = "End";
             // 
-            // dtpEnd
+            // dtpEndDate
             // 
-            this.dtpEnd.CustomFormat = "yyyy-mm-dd hh:mm:ss";
-            this.dtpEnd.Location = new System.Drawing.Point(409, 111);
-            this.dtpEnd.Name = "dtpEnd";
-            this.dtpEnd.Size = new System.Drawing.Size(182, 26);
-            this.dtpEnd.TabIndex = 7;
-            this.dtpEnd.ValueChanged += new System.EventHandler(this.DatePicker_ValueChanged);
+            this.dtpEndDate.CustomFormat = "yyyy-mm-dd hh:mm:ss";
+            this.dtpEndDate.Location = new System.Drawing.Point(409, 111);
+            this.dtpEndDate.Name = "dtpEndDate";
+            this.dtpEndDate.Size = new System.Drawing.Size(182, 26);
+            this.dtpEndDate.TabIndex = 7;
+            this.dtpEndDate.ValueChanged += new System.EventHandler(this.DatePicker_ValueChanged);
             // 
             // lblBeg
             // 
@@ -462,14 +449,14 @@
             this.lblBeg.TabIndex = 32;
             this.lblBeg.Text = "Begin";
             // 
-            // dtpBeg
+            // dtpBegDate
             // 
-            this.dtpBeg.CustomFormat = "yyyy-mm-dd hh:mm:ss";
-            this.dtpBeg.Location = new System.Drawing.Point(74, 109);
-            this.dtpBeg.Name = "dtpBeg";
-            this.dtpBeg.Size = new System.Drawing.Size(174, 26);
-            this.dtpBeg.TabIndex = 6;
-            this.dtpBeg.ValueChanged += new System.EventHandler(this.DatePicker_ValueChanged);
+            this.dtpBegDate.CustomFormat = "yyyy-mm-dd hh:mm:ss";
+            this.dtpBegDate.Location = new System.Drawing.Point(72, 111);
+            this.dtpBegDate.Name = "dtpBegDate";
+            this.dtpBegDate.Size = new System.Drawing.Size(199, 26);
+            this.dtpBegDate.TabIndex = 6;
+            this.dtpBegDate.ValueChanged += new System.EventHandler(this.DatePicker_ValueChanged);
             // 
             // dgvDisplay
             // 
@@ -682,9 +669,9 @@
         private System.Windows.Forms.Panel pnlProject;
         private System.Windows.Forms.Label lblDisplay;
         private System.Windows.Forms.GroupBox gbxSearch;
-        private System.Windows.Forms.DateTimePicker dtpBeg;
+        private System.Windows.Forms.DateTimePicker dtpBegDate;
         private System.Windows.Forms.Label lblEnd;
-        private System.Windows.Forms.DateTimePicker dtpEnd;
+        private System.Windows.Forms.DateTimePicker dtpEndDate;
         private System.Windows.Forms.Label lblBeg;
         private System.Windows.Forms.Label lblClient;
         private System.Windows.Forms.ComboBox cmbClient;
@@ -710,7 +697,6 @@
         private System.Windows.Forms.ComboBox cmbAgent;
         private System.Windows.Forms.Label lblPosition;
         private System.Windows.Forms.CheckBox cbxNumber;
-        private System.Windows.Forms.Label lblNumber;
         private System.Windows.Forms.TextBox txtProject_Number;
         private System.Windows.Forms.Button btnSearch;
     }
