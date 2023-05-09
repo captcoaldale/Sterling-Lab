@@ -8,6 +8,7 @@ using System.Diagnostics.Eventing.Reader;
 using System.Diagnostics;
 using System.Linq;
 using Spire.Pdf.Exporting.XPS.Schema;
+using System.Diagnostics.Contracts;
 
 namespace Sterling_Lab
 {
@@ -37,7 +38,7 @@ namespace Sterling_Lab
         private string form_State;
         private State state { get; set; }
 
-        enum Task { Client, Date, Project, Open }
+        enum Task { Client, Date, Number, Open }
         private string form_task;
         private Task current_task { get; set; }
         private Task previous_task { get; set; }
@@ -95,7 +96,7 @@ namespace Sterling_Lab
         {
             if (IsDirty)
             {
-                current_task = Task.Project;
+                current_task = Task.Number;
                 ConvertTaskToString(current_task);
                 UpdateProject(State.Save);
             }
@@ -113,7 +114,7 @@ namespace Sterling_Lab
 
         private void btnSearch_Click(object sender, EventArgs e)
         {
-            dgvDisplay.Rows.Clear();
+            dgvDisplay.DataSource = null;
             UpdateProject(State.Navigate);
         }
 
@@ -123,32 +124,41 @@ namespace Sterling_Lab
             try
             {
                 int count = 0;
+                
                 CheckBox sendCheck = (CheckBox)sender;
                 foreach (Control ctl in gbxSearch.Controls)
                 {
-                    if (ctl.Name.Substring(3) == sendCheck.Name.Substring(3))
+                    if (ctl.Name.Substring(3).Contains(sendCheck.Name.Substring(3)))
                     {
-                        ctl.Enabled = true; // enable all ctrls w/ similar names
+                        ctl.Enabled = true; // enable all ctrls w/ parallel names
                         switch (ctl.Name.Substring(0, 3))
                         {
                             case "cbx":
                                 CheckBox cbx = (CheckBox)ctl; // strange but this worsk (cannot declare new chbx after an if ... !
-                                if (cbx.Checked)
-                                {
-                                    current_task = ConvertStringToTask(ctl.Name);
-                                }
-                                else
-                                    cbx.Checked = false;
+                                current_task = ConvertStringToTask(ctl.Name);
+                                cbx.Checked = true;
                                 break;
                             default: break;
                         }
-                    } // only disable entry controls (but not buttons and labels)
-                    else if (ctl is Label || ctl is Button)
-                    {
-                        ctl.Enabled = true;
                     }
                     else
-                        ctl.Enabled = false;
+                    { // only disable entry controls without parallel names
+                        switch (ctl.Name.Substring(0,3))
+                        {
+                            case "cbx":
+                                CheckBox cbx = (CheckBox)ctl;
+                                cbx.Checked = false;
+                                break;
+                            case "txt":
+                            case "dtp":
+                            case "cmb":
+                                ctl.Enabled = false;
+                                break;
+                            default: //(but not buttons and labels)
+                                ctl.Enabled = true;
+                                break;
+                        }
+                    }
                     count++;
                 }
             }
@@ -245,11 +255,11 @@ namespace Sterling_Lab
                 current_task = Task.Client;
                 ConvertTaskToString(current_task);
                 state = State.Navigate;
-                UpdateProject(state, GetProjectSelectQuery(current_task));
+                UpdateProject(state);
             }
             else if(state == State.Edit) // changes to other combos need saving 
             {
-                current_task = Task.Project;
+                current_task = Task.Number;
                 ConvertTaskToString(current_task);
                 IsDirty = true;
                 UpdateState(state); // Combo Selected Index Changed.
@@ -306,7 +316,7 @@ namespace Sterling_Lab
             this.form_task = "";
             switch (task)
             {
-                case Task.Project:
+                case Task.Number:
                     form_task = "Project";
                     break;
                 case Task.Date:
@@ -327,7 +337,7 @@ namespace Sterling_Lab
         private Task ConvertStringToTask(string task)
         {
             string name = task.Substring(3);
-            Task tempTask = Task.Project;
+            Task tempTask = Task.Number;
             switch (name)
             {
                 case "Project":
@@ -370,7 +380,7 @@ namespace Sterling_Lab
             if (projectID < 1)
                 this.projectID = Convert.ToInt32(dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString());
 
-            current_task = Task.Project; // projects in dgv
+            current_task = Task.Number; // projects in dgv
             ConvertTaskToString(current_task);
             previous_task = Task.Client;
 
@@ -462,7 +472,7 @@ namespace Sterling_Lab
                 case Task.Open:
                     query += "is_reported = false;";
                     break;
-                case Task.Project:
+                case Task.Number:
                     query += "project_pk = " + projectID + ";";
                     break;
                 default:
@@ -540,7 +550,7 @@ namespace Sterling_Lab
                 ConvertTaskToString(current_task);
                 cbxOpen.Checked = true;
 
-                txtProject_Number.Text = "Enter Project Number";
+                txtNumber.Text = "Enter Project Number";
 
                 UpdateProject(State.Navigate);
             }
@@ -556,7 +566,7 @@ namespace Sterling_Lab
 
         //tbl_project: project_pk, file_name, project_number (generated in UC Sample),client_fk,agent_fk, project_type_fk, objective_fk,priority_requested_fk,
         //date_initiated, date_reported_expected, is_reported,  bill_cust, bill_notes, proj_notes (14 fields)
-        private void PopulateForm()
+        private void PopulateForm(string query = "")
         {
             if(state == State.Load || bs == null) 
             { 
@@ -565,9 +575,9 @@ namespace Sterling_Lab
             IsPopulating = true;
             try
             {
-                 if(dgvDisplay.Rows.Count == 0)
+                 if(dgvDisplay.Rows.Count == 0 || query.Length>0)
                  {
-                    string query = GetProjectSelectQuery(current_task);
+                    query = GetProjectSelectQuery(current_task);
                     dp.PopulateDataGridView(query, dgvDisplay,"project"); // crucial to make a new object
                     this.bs.DataSource = dgvDisplay.DataSource;
                     bs.MoveFirst();
@@ -635,7 +645,7 @@ namespace Sterling_Lab
             }
             else if(e.KeyChar == (char)Keys.Return) // enter key
             {
-                current_task = Task.Project;
+                current_task = Task.Number;
                 ConvertTaskToString(current_task);
                 UpdateProject(State.Save);
             }
@@ -648,7 +658,7 @@ namespace Sterling_Lab
                 case Keys.Enter:
                     if (IsDirty)
                     {
-                        current_task = Task.Project;
+                        current_task = Task.Number;
                         ConvertTaskToString(current_task);
                         UpdateProject(State.Save);
                     }
@@ -668,11 +678,29 @@ namespace Sterling_Lab
             }
         }
 
-        // tbl_project: project_pk, file_name, project_number, client_fk, agent_fk, project_type_fk, objective_fk, date_initiated,date_report_expected,
-        // is_reported, priority_requested_fk, billCust, bill_cust_notes, project_notes (14 fields)
 
-        // N.B. in this UC we supply null values for PROJECT_NUMBER AND FILE_NAME -- these values will be added in the SAMPLE UserControl where we have access to them.
-        private void UpdateProject(State status, string query = "")
+        private void txtProject_Number_Enter(object sender, EventArgs e)
+        {
+            if (txtNumber.Text.Length > 0)
+            {
+                txtNumber.Font = new Font("Lucida Bright", 12, FontStyle.Regular);
+                txtNumber.Text = "";
+            }
+        }
+
+        private void txtProject_Number_Leave(object sender, EventArgs e)
+        {
+            if (txtNumber.Text.Trim() == "")
+            {
+                txtNumber.Font = new Font("Lucida Bright", 12, FontStyle.Italic);
+                txtNumber.Text = "Enter Project Number";
+            }
+        }
+            // tbl_project: project_pk, file_name, project_number, client_fk, agent_fk, project_type_fk, objective_fk, date_initiated,date_report_expected,
+            // is_reported, priority_requested_fk, billCust, bill_cust_notes, project_notes (14 fields)
+
+            // N.B. in this UC we supply null values for PROJECT_NUMBER AND FILE_NAME -- these values will be added in the SAMPLE UserControl where we have access to them.
+            private void UpdateProject(State status, string query = "")
         {
             if (status == State.Load)
                 return;
@@ -685,7 +713,9 @@ namespace Sterling_Lab
                         state = State.Navigate;
                         break;
                     case State.Edit:
+                        break;
                     case State.Navigate:
+                        query = GetProjectSelectQuery(current_task);
                         break;
                     case State.Cancel:
                         ClearControls();
@@ -705,7 +735,7 @@ namespace Sterling_Lab
                             ", bill_cust_notes = '" + txtBill_Cust.Text + "', project_notes = '" + txtProject.Text + "' WHERE ";
                         switch (current_task)
                         {
-                            case Task.Project:
+                            case Task.Number:
                                 query += "project_pk = " + projectID;
                                 break;
                             case Task.Client:
@@ -757,7 +787,7 @@ namespace Sterling_Lab
             {
                 this.state = status;
             }
-            PopulateForm(); // refresh w/ new info
+            PopulateForm(query); // refresh w/ new info
         }
 
         private void UpdateState(State status)
@@ -838,28 +868,7 @@ namespace Sterling_Lab
             this.state = status;
             lblDisplay.Text = "Project :: " + form_State;
             gbxNavControls.Enabled = (state == State.Navigate);
-            DataControlsStatusChange();
-        }
-
-        private void cbxNumber_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void txtProject_Number_Enter(object sender, EventArgs e)
-        {
-            if(txtProject_Number.Text.Length > 0)
-            {
-                txtProject_Number.Text = "";
-            }
-        }
-
-        private void txtProject_Number_Leave(object sender, EventArgs e)
-        {
-            if (txtProject_Number.Text.Trim() == "")
-            {
-                txtProject_Number.Text = "Enter Project Number";
-            }
+            DataControlsStatusChange();                
         }
     }
 }

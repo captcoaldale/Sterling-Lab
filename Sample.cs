@@ -42,11 +42,13 @@ namespace Sterling_Lab
         private Utilties utilities;
 
         enum State { Load, Navigate, New, Edit, Save, Cancel, Delete };
-        enum Task { Project, Sample, Date, Item };
-        private string process = "";
-        private Task task;
         private string form_State;
         private State state { get; set; }
+
+        enum Task { Project, Sample, Date, Item };
+        private string form_task = "";
+        private Task current_task;
+
 
         public Sample()
         {
@@ -471,6 +473,110 @@ namespace Sterling_Lab
             }
         }
 
+
+        private void CheckBox_Click(object sender, EventArgs e)
+        {
+            if (IsPopulating) { return; }
+            try
+            {
+                int count = 0;
+
+                CheckBox sendCheck = (CheckBox)sender;
+                foreach (Control ctl in gbxSearch.Controls)
+                {
+                    if (ctl.Name.Substring(3).Contains(sendCheck.Name.Substring(3)))
+                    {
+                        ctl.Enabled = true; // enable all ctrls w/ parallel names
+                        switch (ctl.Name.Substring(0, 3))
+                        {
+                            case "cbx":
+                                CheckBox cbx = (CheckBox)ctl; // strange but this worsk (cannot declare new chbx after an if ... !
+                                current_task = ConvertStringToTask(ctl.Name);
+                                cbx.Checked = true;
+                                break;
+                            default: break;
+                        }
+                    }
+                    else
+                    { // only disable entry controls without parallel names
+                        switch (ctl.Name.Substring(0, 3))
+                        {
+                            case "cbx":
+                                CheckBox cbx = (CheckBox)ctl;
+                                cbx.Checked = false;
+                                break;
+                            case "txt":
+                            case "dtp":
+                            case "cmb":
+                                ctl.Enabled = false;
+                                break;
+                            default: //(but not buttons and labels)
+                                ctl.Enabled = true;
+                                break;
+                        }
+                    }
+                    count++;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "CheckBox Click Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // prepare for update
+                this.IsDirty = (state == State.Edit);
+            }
+        }
+
+
+        private string ConvertTaskToString(Task task)
+        {
+            this.form_task = "";
+            switch (task)
+            {
+                case Task.Number:
+                    form_task = "Project";
+                    break;
+                case Task.Date:
+                    form_task = "Date";
+                    break;
+                case Task.Client:
+                    form_task = "Client";
+                    break;
+                case Task.Open:
+                    form_task = "Open";
+                    break;
+                default:
+                    break;
+            }
+            return form_task;
+        }
+
+        private Task ConvertStringToTask(string task)
+        {
+            string name = task.Substring(3);
+            Task tempTask = Task.Number;
+            switch (name)
+            {
+                case "Project":
+                    //alread initialized
+                    break;
+                case "Date":
+                    tempTask = Task.Date;
+                    break;
+                case "Client":
+                    tempTask = Task.Client;
+                    break;
+                case "Open":
+                    tempTask = Task.Open;
+                    break;
+                default:
+                    break;
+            }
+            return tempTask;
+        }
+
         private void GetSelectQuery(string tablename)
         {
             string query = string.Empty;
@@ -891,11 +997,11 @@ namespace Sterling_Lab
                     break;
                 default: break;
             }
-            lblTask.Text = process;
+            lblTask.Text = form_task;
             if (task == Task.Project)
                 gbxDataControls.Text = "Sample";
             else             
-                gbxDataControls.Text = process;            
+                gbxDataControls.Text = form_task;            
         }
     }
 }

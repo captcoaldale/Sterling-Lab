@@ -50,7 +50,7 @@
             this.pnlProject = new System.Windows.Forms.Panel();
             this.lblDisplay = new System.Windows.Forms.Label();
             this.gbxSearch = new System.Windows.Forms.GroupBox();
-            this.txtProject_Number = new System.Windows.Forms.TextBox();
+            this.txtNumber = new System.Windows.Forms.TextBox();
             this.btnSearch = new System.Windows.Forms.Button();
             this.cbxNumber = new System.Windows.Forms.CheckBox();
             this.cmbAgent = new System.Windows.Forms.ComboBox();
@@ -299,7 +299,7 @@
             // 
             // gbxSearch
             // 
-            this.gbxSearch.Controls.Add(this.txtProject_Number);
+            this.gbxSearch.Controls.Add(this.txtNumber);
             this.gbxSearch.Controls.Add(this.btnSearch);
             this.gbxSearch.Controls.Add(this.cbxNumber);
             this.gbxSearch.Controls.Add(this.cmbAgent);
@@ -321,14 +321,14 @@
             this.gbxSearch.TabStop = false;
             this.gbxSearch.Text = "Search";
             // 
-            // txtProject_Number
+            // txtNumber
             // 
-            this.txtProject_Number.Location = new System.Drawing.Point(66, 161);
-            this.txtProject_Number.Name = "txtProject_Number";
-            this.txtProject_Number.Size = new System.Drawing.Size(205, 26);
-            this.txtProject_Number.TabIndex = 43;
-            this.txtProject_Number.Enter += new System.EventHandler(this.txtProject_Number_Enter);
-            this.txtProject_Number.Leave += new System.EventHandler(this.txtProject_Number_Leave);
+            this.txtNumber.Location = new System.Drawing.Point(66, 161);
+            this.txtNumber.Name = "txtNumber";
+            this.txtNumber.Size = new System.Drawing.Size(205, 26);
+            this.txtNumber.TabIndex = 43;
+            this.txtNumber.Enter += new System.EventHandler(this.txtProject_Number_Enter);
+            this.txtNumber.Leave += new System.EventHandler(this.txtProject_Number_Leave);
             // 
             // btnSearch
             // 
@@ -350,7 +350,7 @@
             this.cbxNumber.TabIndex = 41;
             this.cbxNumber.Text = "By Number";
             this.cbxNumber.UseVisualStyleBackColor = true;
-            this.cbxNumber.CheckStateChanged += new System.EventHandler(this.CheckBox_Click);
+            this.cbxNumber.Click += new System.EventHandler(this.CheckBox_Click);
             // 
             // cmbAgent
             // 
@@ -370,7 +370,7 @@
             this.cbxOpen.TabIndex = 4;
             this.cbxOpen.Text = "By Open Project";
             this.cbxOpen.UseVisualStyleBackColor = true;
-            this.cbxOpen.CheckStateChanged += new System.EventHandler(this.CheckBox_Click);
+            this.cbxOpen.Click += new System.EventHandler(this.CheckBox_Click);
             // 
             // cbxDate
             // 
@@ -381,7 +381,7 @@
             this.cbxDate.TabIndex = 2;
             this.cbxDate.Text = "By Date";
             this.cbxDate.UseVisualStyleBackColor = true;
-            this.cbxDate.CheckStateChanged += new System.EventHandler(this.CheckBox_Click);
+            this.cbxDate.Click += new System.EventHandler(this.CheckBox_Click);
             // 
             // cbxClient
             // 
@@ -392,7 +392,7 @@
             this.cbxClient.TabIndex = 2;
             this.cbxClient.Text = "By Client";
             this.cbxClient.UseVisualStyleBackColor = true;
-            this.cbxClient.CheckStateChanged += new System.EventHandler(this.CheckBox_Click);
+            this.cbxClient.Click += new System.EventHandler(this.CheckBox_Click);
             // 
             // lblAgent
             // 
@@ -697,7 +697,7 @@
         private System.Windows.Forms.ComboBox cmbAgent;
         private System.Windows.Forms.Label lblPosition;
         private System.Windows.Forms.CheckBox cbxNumber;
-        private System.Windows.Forms.TextBox txtProject_Number;
+        private System.Windows.Forms.TextBox txtNumber;
         private System.Windows.Forms.Button btnSearch;
     }
 }
