@@ -407,7 +407,7 @@ namespace Sterling_Lab
         private void GetElementFromReading(int file_ID, string query)
 
         {
-            string tablename = dp.GetTableName(query);
+            string tablename = dp.GetTableNameFromQuery(query);
             dp.PopulateDataGridView(query, dgvDisplay, tablename);
             //PopulateChart(query);
             UpdateState(State.Edit);

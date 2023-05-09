@@ -58,12 +58,8 @@
             this.lblSite = new System.Windows.Forms.Label();
             this.cmbSite = new System.Windows.Forms.ComboBox();
             this.gbxSearch = new System.Windows.Forms.GroupBox();
-            this.gbxNavControls = new System.Windows.Forms.GroupBox();
-            this.lblItem = new System.Windows.Forms.Label();
-            this.btnEnd = new System.Windows.Forms.Button();
-            this.btnNext = new System.Windows.Forms.Button();
-            this.btnPrev = new System.Windows.Forms.Button();
-            this.btnBeg = new System.Windows.Forms.Button();
+            this.cbxNumber = new System.Windows.Forms.CheckBox();
+            this.cbxItem = new System.Windows.Forms.CheckBox();
             this.cbxDate = new System.Windows.Forms.CheckBox();
             this.cbxSample = new System.Windows.Forms.CheckBox();
             this.cbxProject = new System.Windows.Forms.CheckBox();
@@ -72,10 +68,15 @@
             this.dtpEnd = new System.Windows.Forms.DateTimePicker();
             this.lblBeg = new System.Windows.Forms.Label();
             this.dtpBeg = new System.Windows.Forms.DateTimePicker();
+            this.gbxNavControls = new System.Windows.Forms.GroupBox();
+            this.lblPosition = new System.Windows.Forms.Label();
+            this.btnEnd = new System.Windows.Forms.Button();
+            this.btnNext = new System.Windows.Forms.Button();
+            this.btnPrev = new System.Windows.Forms.Button();
+            this.btnBeg = new System.Windows.Forms.Button();
             this.gbxDisplay = new System.Windows.Forms.GroupBox();
             this.dgvDisplay = new System.Windows.Forms.DataGridView();
             this.dgvTextBoxColumnFilter1 = new DgvFilterPopup.DgvTextBoxColumnFilter();
-            this.cbxItem = new System.Windows.Forms.CheckBox();
             this.gbxDataControls.SuspendLayout();
             this.pnlDisplay.SuspendLayout();
             this.gbxSample.SuspendLayout();
@@ -175,6 +176,7 @@
             this.cbxSampleIsOpen.TabIndex = 30;
             this.cbxSampleIsOpen.Text = "Sample Is Open ?";
             this.cbxSampleIsOpen.UseVisualStyleBackColor = true;
+            this.cbxSampleIsOpen.Click += new System.EventHandler(this.CheckBox_Click);
             // 
             // pnlDisplay
             // 
@@ -205,6 +207,7 @@
             this.cbxSampleInOffice.TabIndex = 21;
             this.cbxSampleInOffice.Text = "Sample In Office ?";
             this.cbxSampleInOffice.UseVisualStyleBackColor = true;
+            this.cbxSampleInOffice.Click += new System.EventHandler(this.CheckBox_Click);
             // 
             // mskDLS
             // 
@@ -252,9 +255,9 @@
             this.gbxSample.Controls.Add(this.lblSite);
             this.gbxSample.Controls.Add(this.cmbSite);
             this.gbxSample.Font = new System.Drawing.Font("Lucida Bright", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.gbxSample.Location = new System.Drawing.Point(3, 323);
+            this.gbxSample.Location = new System.Drawing.Point(0, 327);
             this.gbxSample.Name = "gbxSample";
-            this.gbxSample.Size = new System.Drawing.Size(494, 257);
+            this.gbxSample.Size = new System.Drawing.Size(494, 265);
             this.gbxSample.TabIndex = 26;
             this.gbxSample.TabStop = false;
             this.gbxSample.Text = "Sample";
@@ -379,6 +382,7 @@
             // 
             // gbxSearch
             // 
+            this.gbxSearch.Controls.Add(this.cbxNumber);
             this.gbxSearch.Controls.Add(this.cbxItem);
             this.gbxSearch.Controls.Add(this.cbxDate);
             this.gbxSearch.Controls.Add(this.cbxSample);
@@ -391,14 +395,115 @@
             this.gbxSearch.Font = new System.Drawing.Font("Lucida Bright", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.gbxSearch.Location = new System.Drawing.Point(3, 82);
             this.gbxSearch.Name = "gbxSearch";
-            this.gbxSearch.Size = new System.Drawing.Size(479, 216);
+            this.gbxSearch.Size = new System.Drawing.Size(491, 239);
             this.gbxSearch.TabIndex = 45;
             this.gbxSearch.TabStop = false;
             this.gbxSearch.Text = "Search";
             // 
+            // cbxNumber
+            // 
+            this.cbxNumber.AutoSize = true;
+            this.cbxNumber.Location = new System.Drawing.Point(105, 63);
+            this.cbxNumber.Name = "cbxNumber";
+            this.cbxNumber.Size = new System.Drawing.Size(225, 21);
+            this.cbxNumber.TabIndex = 54;
+            this.cbxNumber.Text = "Generate Project Numbers";
+            this.cbxNumber.UseVisualStyleBackColor = true;
+            this.cbxNumber.Click += new System.EventHandler(this.CheckBox_Click);
+            // 
+            // cbxItem
+            // 
+            this.cbxItem.AutoSize = true;
+            this.cbxItem.Location = new System.Drawing.Point(296, 101);
+            this.cbxItem.Name = "cbxItem";
+            this.cbxItem.Size = new System.Drawing.Size(125, 21);
+            this.cbxItem.TabIndex = 53;
+            this.cbxItem.Text = "Sample Items";
+            this.cbxItem.UseVisualStyleBackColor = true;
+            this.cbxItem.Click += new System.EventHandler(this.CheckBox_Click);
+            // 
+            // cbxDate
+            // 
+            this.cbxDate.AutoSize = true;
+            this.cbxDate.Location = new System.Drawing.Point(273, 24);
+            this.cbxDate.Name = "cbxDate";
+            this.cbxDate.Size = new System.Drawing.Size(143, 21);
+            this.cbxDate.TabIndex = 52;
+            this.cbxDate.Text = "Project By Date";
+            this.cbxDate.UseVisualStyleBackColor = true;
+            this.cbxDate.Click += new System.EventHandler(this.CheckBox_Click);
+            // 
+            // cbxSample
+            // 
+            this.cbxSample.AutoSize = true;
+            this.cbxSample.Location = new System.Drawing.Point(33, 101);
+            this.cbxSample.Name = "cbxSample";
+            this.cbxSample.Size = new System.Drawing.Size(131, 21);
+            this.cbxSample.TabIndex = 51;
+            this.cbxSample.Text = "Open Samples";
+            this.cbxSample.UseVisualStyleBackColor = true;
+            this.cbxSample.Click += new System.EventHandler(this.CheckBox_Click);
+            // 
+            // cbxProject
+            // 
+            this.cbxProject.AutoSize = true;
+            this.cbxProject.Location = new System.Drawing.Point(33, 23);
+            this.cbxProject.Name = "cbxProject";
+            this.cbxProject.Size = new System.Drawing.Size(132, 21);
+            this.cbxProject.TabIndex = 50;
+            this.cbxProject.Text = "Open Projects";
+            this.cbxProject.UseVisualStyleBackColor = true;
+            this.cbxProject.Click += new System.EventHandler(this.CheckBox_Click);
+            // 
+            // btnSearch
+            // 
+            this.btnSearch.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.btnSearch.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.btnSearch.Location = new System.Drawing.Point(192, 191);
+            this.btnSearch.Name = "btnSearch";
+            this.btnSearch.Size = new System.Drawing.Size(112, 28);
+            this.btnSearch.TabIndex = 49;
+            this.btnSearch.Text = "Search";
+            this.btnSearch.UseVisualStyleBackColor = false;
+            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
+            // 
+            // lblEnd
+            // 
+            this.lblEnd.AutoSize = true;
+            this.lblEnd.Location = new System.Drawing.Point(234, 155);
+            this.lblEnd.Name = "lblEnd";
+            this.lblEnd.Size = new System.Drawing.Size(36, 17);
+            this.lblEnd.TabIndex = 48;
+            this.lblEnd.Text = "End";
+            // 
+            // dtpEnd
+            // 
+            this.dtpEnd.CustomFormat = "yyyy-mm-dd hh:mm:ss";
+            this.dtpEnd.Location = new System.Drawing.Point(276, 147);
+            this.dtpEnd.Name = "dtpEnd";
+            this.dtpEnd.Size = new System.Drawing.Size(137, 25);
+            this.dtpEnd.TabIndex = 47;
+            // 
+            // lblBeg
+            // 
+            this.lblBeg.AutoSize = true;
+            this.lblBeg.Location = new System.Drawing.Point(33, 155);
+            this.lblBeg.Name = "lblBeg";
+            this.lblBeg.Size = new System.Drawing.Size(50, 17);
+            this.lblBeg.TabIndex = 46;
+            this.lblBeg.Text = "Begin";
+            // 
+            // dtpBeg
+            // 
+            this.dtpBeg.CustomFormat = "yyyy-mm-dd hh:mm:ss";
+            this.dtpBeg.Location = new System.Drawing.Point(92, 149);
+            this.dtpBeg.Name = "dtpBeg";
+            this.dtpBeg.Size = new System.Drawing.Size(129, 25);
+            this.dtpBeg.TabIndex = 45;
+            // 
             // gbxNavControls
             // 
-            this.gbxNavControls.Controls.Add(this.lblItem);
+            this.gbxNavControls.Controls.Add(this.lblPosition);
             this.gbxNavControls.Controls.Add(this.btnEnd);
             this.gbxNavControls.Controls.Add(this.btnNext);
             this.gbxNavControls.Controls.Add(this.btnPrev);
@@ -410,14 +515,14 @@
             this.gbxNavControls.TabStop = false;
             this.gbxNavControls.Text = "Scroll";
             // 
-            // lblItem
+            // lblPosition
             // 
-            this.lblItem.AutoSize = true;
-            this.lblItem.Location = new System.Drawing.Point(214, 24);
-            this.lblItem.Name = "lblItem";
-            this.lblItem.Size = new System.Drawing.Size(14, 13);
-            this.lblItem.TabIndex = 48;
-            this.lblItem.Text = "#";
+            this.lblPosition.AutoSize = true;
+            this.lblPosition.Location = new System.Drawing.Point(214, 24);
+            this.lblPosition.Name = "lblPosition";
+            this.lblPosition.Size = new System.Drawing.Size(14, 13);
+            this.lblPosition.TabIndex = 48;
+            this.lblPosition.Text = "#";
             // 
             // btnEnd
             // 
@@ -463,83 +568,6 @@
             this.btnBeg.UseVisualStyleBackColor = false;
             this.btnBeg.Click += new System.EventHandler(this.btnBeg_Click);
             // 
-            // cbxDate
-            // 
-            this.cbxDate.AutoSize = true;
-            this.cbxDate.Location = new System.Drawing.Point(307, 37);
-            this.cbxDate.Name = "cbxDate";
-            this.cbxDate.Size = new System.Drawing.Size(143, 21);
-            this.cbxDate.TabIndex = 52;
-            this.cbxDate.Text = "Project By Date";
-            this.cbxDate.UseVisualStyleBackColor = true;
-            this.cbxDate.CheckedChanged += new System.EventHandler(this.CheckBox_CheckedChanged);
-            // 
-            // cbxSample
-            // 
-            this.cbxSample.AutoSize = true;
-            this.cbxSample.Location = new System.Drawing.Point(44, 76);
-            this.cbxSample.Name = "cbxSample";
-            this.cbxSample.Size = new System.Drawing.Size(123, 21);
-            this.cbxSample.TabIndex = 51;
-            this.cbxSample.Text = "Open Sample";
-            this.cbxSample.UseVisualStyleBackColor = true;
-            this.cbxSample.Click += new System.EventHandler(this.CheckBox_CheckedChanged);
-            // 
-            // cbxProject
-            // 
-            this.cbxProject.AutoSize = true;
-            this.cbxProject.Location = new System.Drawing.Point(44, 37);
-            this.cbxProject.Name = "cbxProject";
-            this.cbxProject.Size = new System.Drawing.Size(124, 21);
-            this.cbxProject.TabIndex = 50;
-            this.cbxProject.Text = "Open Project";
-            this.cbxProject.UseVisualStyleBackColor = true;
-            this.cbxProject.CheckStateChanged += new System.EventHandler(this.CheckBox_CheckedChanged);
-            // 
-            // btnSearch
-            // 
-            this.btnSearch.Location = new System.Drawing.Point(307, 177);
-            this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(112, 28);
-            this.btnSearch.TabIndex = 49;
-            this.btnSearch.Text = "Search";
-            this.btnSearch.UseVisualStyleBackColor = true;
-            this.btnSearch.Click += new System.EventHandler(this.btnSampleItem_Click);
-            // 
-            // lblEnd
-            // 
-            this.lblEnd.AutoSize = true;
-            this.lblEnd.Location = new System.Drawing.Point(234, 132);
-            this.lblEnd.Name = "lblEnd";
-            this.lblEnd.Size = new System.Drawing.Size(36, 17);
-            this.lblEnd.TabIndex = 48;
-            this.lblEnd.Text = "End";
-            // 
-            // dtpEnd
-            // 
-            this.dtpEnd.CustomFormat = "yyyy-mm-dd hh:mm:ss";
-            this.dtpEnd.Location = new System.Drawing.Point(276, 124);
-            this.dtpEnd.Name = "dtpEnd";
-            this.dtpEnd.Size = new System.Drawing.Size(137, 25);
-            this.dtpEnd.TabIndex = 47;
-            // 
-            // lblBeg
-            // 
-            this.lblBeg.AutoSize = true;
-            this.lblBeg.Location = new System.Drawing.Point(33, 132);
-            this.lblBeg.Name = "lblBeg";
-            this.lblBeg.Size = new System.Drawing.Size(50, 17);
-            this.lblBeg.TabIndex = 46;
-            this.lblBeg.Text = "Begin";
-            // 
-            // dtpBeg
-            // 
-            this.dtpBeg.CustomFormat = "yyyy-mm-dd hh:mm:ss";
-            this.dtpBeg.Location = new System.Drawing.Point(92, 126);
-            this.dtpBeg.Name = "dtpBeg";
-            this.dtpBeg.Size = new System.Drawing.Size(129, 25);
-            this.dtpBeg.TabIndex = 45;
-            // 
             // gbxDisplay
             // 
             this.gbxDisplay.Controls.Add(this.dgvDisplay);
@@ -579,16 +607,6 @@
             this.dgvTextBoxColumnFilter1.Size = new System.Drawing.Size(8, 8);
             this.dgvTextBoxColumnFilter1.TabIndex = 47;
             this.dgvTextBoxColumnFilter1.VFilterAlignment = DgvFilterPopup.VFilterAlignment.Center;
-            // 
-            // cbxItem
-            // 
-            this.cbxItem.AutoSize = true;
-            this.cbxItem.Location = new System.Drawing.Point(307, 76);
-            this.cbxItem.Name = "cbxItem";
-            this.cbxItem.Size = new System.Drawing.Size(123, 21);
-            this.cbxItem.TabIndex = 53;
-            this.cbxItem.Text = "Open Sample";
-            this.cbxItem.UseVisualStyleBackColor = true;
             // 
             // Sample
             // 
@@ -659,7 +677,7 @@
         private DgvFilterPopup.DgvTextBoxColumnFilter dgvTextBoxColumnFilter1;
         private System.Windows.Forms.DataGridView dgvDisplay;
         private System.Windows.Forms.GroupBox gbxNavControls;
-        private System.Windows.Forms.Label lblItem;
+        private System.Windows.Forms.Label lblPosition;
         private System.Windows.Forms.Button btnEnd;
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.Button btnPrev;
@@ -669,5 +687,6 @@
         private System.Windows.Forms.Label lblPrice;
         private System.Windows.Forms.ComboBox cmbPrice;
         private System.Windows.Forms.CheckBox cbxItem;
+        private System.Windows.Forms.CheckBox cbxNumber;
     }
 }

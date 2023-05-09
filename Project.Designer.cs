@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.gbxProject = new System.Windows.Forms.GroupBox();
             this.cbxIs_Reported = new System.Windows.Forms.CheckBox();
             this.gbxBill_Client = new System.Windows.Forms.GroupBox();
@@ -333,9 +333,9 @@
             // btnSearch
             // 
             this.btnSearch.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnSearch.Location = new System.Drawing.Point(391, 161);
+            this.btnSearch.Location = new System.Drawing.Point(395, 160);
             this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(200, 27);
+            this.btnSearch.Size = new System.Drawing.Size(177, 27);
             this.btnSearch.TabIndex = 42;
             this.btnSearch.Text = "Search";
             this.btnSearch.UseVisualStyleBackColor = false;
@@ -460,8 +460,8 @@
             // 
             // dgvDisplay
             // 
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.dgvDisplay.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.dgvDisplay.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.dgvDisplay.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvDisplay.Location = new System.Drawing.Point(6, 19);
             this.dgvDisplay.Name = "dgvDisplay";

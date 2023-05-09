@@ -1,4 +1,5 @@
 ﻿using DataObjects;
+using Microsoft.AnalysisServices.AdomdClient;
 using System;
 using System.Data;
 using System.Drawing;
@@ -28,162 +29,148 @@ namespace Sterling_Lab
 
         private string tablename;
         private string CellChangedValue;
-        private int rowCount = 0;
+        private int current_row = 0;
 
         private bool sample_saved;
-        private bool UpdatingProject = false; //stop double checkbox clicks
-        private bool UpdatingDate = false; //stop double checkbox clicks
-        private bool UpdatingSample = false; //stop double checkbox clicks
 
         private bool IsEditingCell = false;
         private bool IsDirty = false;
-
-        private DataProcessor dp;
-        private Utilties utilities;
+        private bool IsPopulating = false;
 
         enum State { Load, Navigate, New, Edit, Save, Cancel, Delete };
         private string form_State;
-        private State state { get; set; }
+        private State current_state { get; set; }
 
         enum Task { Project, Sample, Date, Item };
         private string form_task = "";
         private Task current_task;
 
+        private DataProcessor dp;
+        private Utilties ut;
+        private BindingSource bs;
+        private DataTable dt;
 
         public Sample()
         {
             InitializeComponent();
             dp = new DataProcessor("DB");
-            utilities = new Utilties();
-            UpdateState(State.Load);
+            ut= new Utilties();
+            bs = new BindingSource();
+            dt = new DataTable();
+            InitializeControls();
         }
 
         // Scrolll
         private void btnBeg_Click(object sender, EventArgs e)
         {
-            rowCount = 0;
-            dgvDisplay.ClearSelection();
-            dgvDisplay.Rows[rowCount].Selected = true;
-            PopulateForm(tablename);
+            bs.MoveFirst();
+            PopulateForm();
         }
 
         private void btnEnd_Click(object sender, EventArgs e)
         {
-            rowCount = dgvDisplay.Rows.Count - 2;
-            dgvDisplay.ClearSelection();
-            dgvDisplay.Rows[rowCount].Selected = true;
-            PopulateForm(tablename);
+            bs.MoveLast();
+            PopulateForm();
         }
 
         private void btnPrev_Click(object sender, EventArgs e)
         {
-            rowCount = utilities.SetRange(--rowCount, 0, dgvDisplay.Rows.Count - 2);
-            dgvDisplay.ClearSelection();
-            dgvDisplay.Rows[rowCount].Selected = true;
-            PopulateForm(tablename);
+            bs.MovePrevious();
+            PopulateForm();
         }
 
         private void btnNext_Click(object sender, EventArgs e)
         {
-            rowCount = utilities.SetRange(++rowCount, 0, dgvDisplay.Rows.Count - 2);
-            dgvDisplay.ClearSelection();
-            dgvDisplay.Rows[rowCount].Selected = true;
-            PopulateForm(tablename);
+            bs.MoveNext();
+            PopulateForm();
         }
     
         // Data
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            UpdateState(State.Cancel);
+            UpdateSample(State.Cancel);
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            UpdateState(State.Delete);
+            UpdateSample(State.Delete);
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            UpdateState(State.Edit);
+            UpdateSample(State.Edit);
         }
 
         private void btnNew_Click(object sender, EventArgs e)
         {
-            UpdateState(State.New);
+            UpdateSample(State.New);
         }
         private void btnSave_Click(object sender, EventArgs e)
         {
-            if (state != State.Load)
-                UpdateState(State.Save);
+            if (current_state != State.Load)
+                UpdateSample(State.Save);
         }
 
         // Search
-        private void btnProject_Click(object sender, EventArgs e)
+        private void btnSearch_Click(object sender, EventArgs e)
         {
-            GetSelectQuery("project");
-        }
-
-        private void btnSample_Click(object sender, EventArgs e)
-        {
-            GetSelectQuery("sample");
-        }
-
-        private void btnSampleItem_Click(object sender, EventArgs e)
-        {
-            GetSelectQuery("sample_item");
+            GetSampleSelectQuery(current_task);
         }
 
         //
-        private void CheckBox_CheckedChanged(object sender, EventArgs e)
+        private void CheckBox_Click(object sender, EventArgs e)
         {
-            UpdatingProject = cbxProject.Checked;
-            UpdatingDate = cbxDate.Checked;
-            UpdatingSample = cbxSample.Checked;
-
-            CheckBox checkBox = (CheckBox)sender;
-            switch (checkBox.Name)
+            if (IsPopulating) { return; }
+            try
             {
-                case "cbxProject":
-                    if (UpdatingProject)
+                int count = 0;
+
+                CheckBox sendCheck = (CheckBox)sender;
+                foreach (Control ctl in gbxSearch.Controls)
+                {
+                    if (ctl.Name.Substring(3).Contains(sendCheck.Name.Substring(3)))
                     {
-                        cbxDate.Checked = cbxSample.Checked = !checkBox.Checked;
-                        UpdatingProject = !UpdatingProject;
-                    }
-                    break;
-                case "cbxDate":
-                    if (state == State.Load)
-                    {
-                        cbxDate.Checked = false;
-                    }
-                    if (cbxDate.Checked)
-                    {
-                        dtpBeg.Visible = true;
-                        dtpEnd.Visible = true;
-                        lblBeg.Visible = true;
-                        lblEnd.Visible = true;
+                        ctl.Enabled = true; // enable all ctrls w/ parallel names
+                        switch (ctl.Name.Substring(0, 3))
+                        {
+                            case "cbx":
+                                CheckBox cbx = (CheckBox)ctl; // strange but this worsk (cannot declare new chbx after an if ... !
+                                current_task = ConvertStringToTask(ctl.Name);
+                                cbx.Checked = true;
+                                break;
+                            default: break;
+                        }
                     }
                     else
-                    {
-                        dtpBeg.Visible = false;
-                        dtpEnd.Visible = false;
-                        lblBeg.Visible = false;
-                        lblEnd.Visible = false;
+                    { // only disable entry controls without parallel names
+                        switch (ctl.Name.Substring(0, 3))
+                        {
+                            case "cbx":
+                                CheckBox cbx = (CheckBox)ctl;
+                                cbx.Checked = false;
+                                break;
+                            case "txt":
+                            case "dtp":
+                            case "cmb":
+                                ctl.Enabled = false;
+                                break;
+                            default: //(but not buttons and labels)
+                                ctl.Enabled = true;
+                                break;
+                        }
                     }
-                    if (UpdatingDate)
-                    {
-                        cbxProject.Checked = cbxSample.Checked = !checkBox.Checked;
-                        UpdatingDate = !UpdatingDate;
-                    }
-                    break;
-                case "cbxSample":
-                    if (UpdatingSample)
-                    {
-                        cbxDate.Checked = cbxProject.Checked = !checkBox.Checked;
-                        UpdatingSample = !UpdatingSample;
-                    }
-                    break;
+                    count++;
+                }
             }
-            //IsUpdating = !IsUpdating;
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "CheckBox Click Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // prepare for update
+                this.IsDirty = (current_state == State.Edit);
+            }
         }
 
         private void Combo_SelectedItemChanged(object sender, EventArgs e)
@@ -238,89 +225,136 @@ namespace Sterling_Lab
             }
         }
 
+
+
+        private string ConvertTaskToString(Task task, bool IsTable = false)
+        {
+            this.form_task = "";
+            switch (task)
+            {
+                case Task.Project:
+                    form_task = (IsTable) ? "tbl_project" : "Project";
+                    break;
+                case Task.Date:
+                    if (IsTable)
+                    {
+                        if (current_task == Task.Project)
+                            form_task = "tbl_project";
+                        else if (current_task == Task.Sample)
+                            form_task = "tbl_sample";
+                    }
+                    else form_task = "Date";
+                    break;
+                case Task.Sample:
+                    form_task = (IsTable) ? "tbl_sample" : "Sample";
+                    break;
+                case Task.Item:
+                    form_task = (IsTable) ? "tbl_sample_items":"Item";
+                    break;
+                default:
+                    break;
+            }
+            return form_task;
+        }
+
+        private Task ConvertStringToTask(string task)
+        {
+            string name = task.Substring(3);
+            Task tempTask = Task.Project;
+            switch (name)
+            {
+                case "Project":
+                    //default
+                    break;
+                case "Date":
+                    tempTask = Task.Date;
+                    break;
+                case "Sample":
+                    tempTask = Task.Sample;
+                    break;
+                case "Item":
+                    tempTask = Task.Item;
+                    break;
+                default:
+                    break;
+            }
+            return tempTask;
+        }
+
         private void dgvDisplay_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            string query = "";
-            object val;
+            //string query = "";
+            //object val;
             try
             {
-                switch (state)
+                switch (current_state)
                 {
-                    case State.Load:
-                        val = dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString();
-                        this.projectID = Convert.ToInt32(val);
-                        break;
-                    case State.Edit:
-                        if (task == Task.Project)
-                        {
-                            val = dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString();
-                            this.projectID = Convert.ToInt32(val);
-                        }
-                        break;
-                    case State.New:
-                        InitializeControls();
-                        break;
-                    case State.Save: // get sample items
-                        if (task == Task.Project)
-                        {
-                            //tbl_sample: sample_pk, batch_fk, project_fk, method_fk, location_fk, sample_type_fk, sample_number, date_collected, sample_notes, is_in_office, is_open (11 fields)
-                            val = dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString();
-                            this.projectID = Convert.ToInt32(val);
-                            query = "INSERT INTO tbl_sample VALUES (0,null," + projectID + "," + methodID + "," + locationID + ",;" + sample_number + "','" + dtpCollected.Value +
-                                "','" + txtSampleNotes.Text + "'," + cbxSampleInOffice.Checked + "," + cbxSampleIsOpen.Checked + ");";
-                        }
-                        else if (task == Task.Sample)
-                        {
-                            // tbl_sample_items: sample_item_pk, sample_fk, Tem0(oC), pH, S.G, Silica, Conductivity, TDSm, TDSc, Ohms, T-Hard, T-Alk, T-Acid, T-solids, Oil, Resid, Dissolved (17 fields)
-                            val = dgvDisplay.Rows[e.RowIndex].Cells["sample_pk"].FormattedValue.ToString();
-                            this.sampleID = Convert.ToInt32(val);
-                            query = "iNSERT INTO tbl_sample_items VALUES (0," + sampleID + "null,null,null,null,null,null,null,null,null,null,null,null,null,null,null;)";
-                        }
-                        break;                      
-                    case State.Navigate:
-                        if (task == Task.Project)
-                        {
-                            // crucial values ...
-                            val = dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString();
-                            this.projectID = Convert.ToInt32(val);
-                            val = dgvDisplay.Rows[e.RowIndex].Cells["client_fk"].FormattedValue.ToString();
-                            this.clientID = Convert.ToInt32(val);
-                            string date = dp.GetDataItem("SELECT date_initiated FROM tbl_project WHERE project_pk = " + projectID).ToString();
-                            // sample
-                            GetSelectQuery("sample");
-                            UpdateTask(Task.Sample);
-                        }
-                        else if (task == Task.Sample)
-                        {
-                            val = dgvDisplay.Rows[e.RowIndex].Cells["sample_pk"].FormattedValue.ToString();
-                            this.sampleID = Convert.ToInt32(val);
-                            if (state == State.Navigate)
-                            {
-                                GetSelectQuery("sample");
-                            }
-                            // sample_items
-                            GetSelectQuery("sample_items");
-                            UpdateTask(Task.Item);
-                        }
-                        else
-                        {
-                            GetSelectQuery("sample_items");
-                            UpdateTask(Task.Item);
-                        }
-                        break;
+                    //case State.Load:
+                    //    break;
+                    //case State.Edit:
+                    //    if (current_task == Task.Project)
+                    //    {
+                    //        val = dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString();
+                    //        this.projectID = Convert.ToInt32(val);
+                    //    }
+                    //    break;
+                    //case State.Save: // get sample items
+                    //    if (current_task == Task.Project)
+                    //    {
+                    //        //tbl_sample: sample_pk, batch_fk, project_fk, method_fk, location_fk, sample_type_fk, sample_number, date_collected, sample_notes, is_in_office, is_open (11 fields)
+                    //        val = dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString();
+                    //        this.projectID = Convert.ToInt32(val);
+                    //        query = "INSERT INTO tbl_sample VALUES (0,null," + projectID + "," + methodID + "," + locationID + ",;" + sample_number + "','" + dtpCollected.Value +
+                    //            "','" + txtSampleNotes.Text + "'," + cbxSampleInOffice.Checked + "," + cbxSampleIsOpen.Checked + ");";
+                    //    }
+                    //    else if (current_task == Task.Sample)
+                    //    {
+                    //        // tbl_sample_items: sample_item_pk, sample_fk, Tem0(oC), pH, S.G, Silica, Conductivity, TDSm, TDSc, Ohms, T-Hard, T-Alk, T-Acid, T-solids, Oil, Resid, Dissolved (17 fields)
+                    //        val = dgvDisplay.Rows[e.RowIndex].Cells["sample_pk"].FormattedValue.ToString();
+                    //        this.sampleID = Convert.ToInt32(val);
+                    //        query = "iNSERT INTO tbl_sample_items VALUES (0," + sampleID + "null,null,null,null,null,null,null,null,null,null,null,null,null,null,null;)";
+                    //    }
+                    //    break;                      
+                    //case State.Navigate:
+                    //    if (current_task == Task.Project)
+                    //    {
+                    //        // crucial values ...
+                    //        val = dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString();
+                    //        this.projectID = Convert.ToInt32(val);
+                    //        val = dgvDisplay.Rows[e.RowIndex].Cells["client_fk"].FormattedValue.ToString();
+                    //        this.clientID = Convert.ToInt32(val);
+                    //        string date = dp.GetDataItem("SELECT date_initiated FROM tbl_project WHERE project_pk = " + projectID).ToString();
+                    //        // sample
+                    //        GetSampleSelectQuery(current_task);
+
+                    //    }
+                    //    else if (current_task == Task.Sample)
+                    //    {
+                    //        val = dgvDisplay.Rows[e.RowIndex].Cells["sample_pk"].FormattedValue.ToString();
+                    //        this.sampleID = Convert.ToInt32(val);
+                    //        if (current_state == State.Navigate)
+                    //            UpdateSample(current_state);
+ 
+                    //        // sample_items
+                    //        current_task = task.;
+                    //        UpdateSample(current_state);
+                    //    }
+                    //    else
+                    //    {
+                    //        GetSampleSelectQuery(current_task);
+                    //        UpdateSample(Task.Item);
+                    //    }
+                    //    break;
                     default:
                         break;
                 }
-                if (!String.IsNullOrEmpty(query))
-                    dp.PopulateDataGridView(query, dgvDisplay);
+                UpdateSample(current_state);
             }
             catch (Exception x)
             {
                 MessageBox.Show(x.Message + " Error. Try again.", "DataGridView Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            finally
-            {
-            }
+
         }
 
         private void dgvDisplay_KeyDown(object sender, KeyEventArgs e)
@@ -473,198 +507,90 @@ namespace Sterling_Lab
             }
         }
 
-
-        private void CheckBox_Click(object sender, EventArgs e)
-        {
-            if (IsPopulating) { return; }
-            try
-            {
-                int count = 0;
-
-                CheckBox sendCheck = (CheckBox)sender;
-                foreach (Control ctl in gbxSearch.Controls)
-                {
-                    if (ctl.Name.Substring(3).Contains(sendCheck.Name.Substring(3)))
-                    {
-                        ctl.Enabled = true; // enable all ctrls w/ parallel names
-                        switch (ctl.Name.Substring(0, 3))
-                        {
-                            case "cbx":
-                                CheckBox cbx = (CheckBox)ctl; // strange but this worsk (cannot declare new chbx after an if ... !
-                                current_task = ConvertStringToTask(ctl.Name);
-                                cbx.Checked = true;
-                                break;
-                            default: break;
-                        }
-                    }
-                    else
-                    { // only disable entry controls without parallel names
-                        switch (ctl.Name.Substring(0, 3))
-                        {
-                            case "cbx":
-                                CheckBox cbx = (CheckBox)ctl;
-                                cbx.Checked = false;
-                                break;
-                            case "txt":
-                            case "dtp":
-                            case "cmb":
-                                ctl.Enabled = false;
-                                break;
-                            default: //(but not buttons and labels)
-                                ctl.Enabled = true;
-                                break;
-                        }
-                    }
-                    count++;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "CheckBox Click Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                // prepare for update
-                this.IsDirty = (state == State.Edit);
-            }
-        }
-
-
-        private string ConvertTaskToString(Task task)
-        {
-            this.form_task = "";
-            switch (task)
-            {
-                case Task.Number:
-                    form_task = "Project";
-                    break;
-                case Task.Date:
-                    form_task = "Date";
-                    break;
-                case Task.Client:
-                    form_task = "Client";
-                    break;
-                case Task.Open:
-                    form_task = "Open";
-                    break;
-                default:
-                    break;
-            }
-            return form_task;
-        }
-
-        private Task ConvertStringToTask(string task)
-        {
-            string name = task.Substring(3);
-            Task tempTask = Task.Number;
-            switch (name)
-            {
-                case "Project":
-                    //alread initialized
-                    break;
-                case "Date":
-                    tempTask = Task.Date;
-                    break;
-                case "Client":
-                    tempTask = Task.Client;
-                    break;
-                case "Open":
-                    tempTask = Task.Open;
-                    break;
-                default:
-                    break;
-            }
-            return tempTask;
-        }
-
-        private void GetSelectQuery(string tablename)
+        private string GetSampleSelectQuery(Task current_task)
         {
             string query = string.Empty;
-            this.tablename = tablename;
-            if (state != State.Load)
+            switch (current_task)
             {
-                try
-                {
-                    switch (tablename)
-                    {
-                        case "project":
-                            if (cbxDate.Checked)
-                                query = "SELECT * FROM tbl_project WHERE date_initiated BETWEEN '" + dtpBeg.Value + "' AND '" + dtpEnd.Value + "'";
-                            else if (cbxProject.Checked)
-                                query = "SELECT * FROM tbl_project WHERE is_reported = false;";
-                            task = Task.Project;
-                            break;
-                        case "sample":
-                            if (cbxSample.Checked)
-                                query = "SELECT * FROM tbl_sample WHERE is_open = true;";
-                            else if (projectID > 0)
-                                query = "SELECT * FROM tbl_sample WHERE project_fk = " + projectID + ";";
-                            task = Task.Sample;
-                            break;
-                        case "sample_item":
-                            if (sampleID > 0)
-                                query = "SELECT * FROM tbl_sample_items WHERE sample_fk = " + sampleID + ";";
-                            else
-                                throw (new Exception("No items for this sample. Create new!"));
-                            task = Task.Item;
-                            break;
-                        case "item":
-                            break;
-                        default:
-                            // saved snippet for sample items
-                            //query = "SELECT i.sample_item_pk, m.method_item, i.value1, u.unit_desc " +
-                            //    "FROM tbl_sample_item i " +
-                            //    "INNER JOIN tbl_sample t ON i.sample_fk = t.sample_pk " +
-                            //    "INNER JOIN tbl_method_item m ON i.method_item_fk = m.method_item_pk " +
-                            //    "INNER JOIN tbl_method_type y ON i.method_type_fk = y.type_pk " +
-                            //    "INNER JOIN tbl_unit u on i.unit_1_fk = u.unit_pk " +
-                            //    "WHERE (i.method_item_fk <> 1 && i.method_type_fk = 1) && sample_fk = " + this.projectID; // method_item_fk = 1 (blank)
-                            break;
-                    }
-                    PopulateForm(tablename);
-                    dp.PopulateDataGridView(query, dgvDisplay, tablename);
-                    if (dp.RowsAffected == 0)
-                    {
-                        switch (task)
-                        {
-                            case Task.Project:
-                                if (cbxDate.Checked)
-                                    throw new Exception("No projects for this date range.");
-                                else
-                                    throw new Exception("No open projects available.");
-                            case Task.Sample:
-                                throw new Exception("No open samples for this project.");
-                            case Task.Item:
-                                throw new Exception("No items for this sample. Create New.");
-                        }
-                    }
-                }
-                catch (Exception x)
-                {
-                    MessageBox.Show(x.Message, "Query read error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    UpdateTask(task);
-                }
+                case Task.Project:
+                    if (cbxDate.Checked)
+                        query = "SELECT * FROM tbl_project WHERE date_initiated BETWEEN '" + dtpBeg.Value + "' AND '" + dtpEnd.Value + "'";
+                    else if (cbxProject.Checked)
+                        query = "SELECT * FROM tbl_project WHERE is_reported = false;";
+                    break;
+                case Task.Sample:
+                    if (cbxSample.Checked)
+                        query = "SELECT * FROM tbl_sample WHERE is_open = true;";
+                    else if (projectID > 0)
+                        query = "SELECT * FROM tbl_sample WHERE project_fk = " + projectID + ";";
+                    break;
+                case Task.Date:
+                    query = "SELECT * FROM tbl_sample WHERE date_collected = BETWEEN '" + dtpBeg.Value +  "' AND '" + dtpEnd.Value + "';";
+                    break;
+                case Task.Item:
+                    if (sampleID > 0)
+                        query = "SELECT * FROM tbl_sample_items WHERE sample_fk = " + sampleID + ";";
+                    break;
+                default:
+                    break;            
             }
+            return query;
         }
 
-        private void InitializeControls(bool checktheboxes = false)
+        private void InitializeCombos()
         {
             try
             {
                 string query = "";
-                query = "SELECT concat(acronym, ' -- ',method_desc) AS display, method_pk AS value FROM tbl_method";
-                dp.PopulateCombo(query, cmbMethod, "display", "value");
-                query = "SELECT field_desc AS display, field_pk AS value FROM tbl_field;";
-                dp.PopulateCombo(query, cmbField, "display", "value");
-                query = "SELECT zone_desc AS display, zone_pk AS value FROM tbl_zone;";
-                dp.PopulateCombo(query, cmbZone, "display", "value");
-                query = "SELECT site_desc AS display, site_pk AS value FROM tbl_site";
-                dp.PopulateCombo(query, cmbSite, "display", "value");
-                query = "SELECT amount AS display, price_pk AS value FROM tbl_price";
-                dp.PopulateCombo(query, cmbPrice, "display", "value");
+                foreach (Control ctl in gbxSample.Controls)
+                {
+                    if (ctl is ComboBox)
+                    {
+                        ComboBox comboBox = (ComboBox)ctl;
+                        switch (comboBox.Name)
+                        {
+                            case "cmbMethod":
+                                query = "SELECT concat(acronym, ' -- ',method_desc) AS display, method_pk AS value FROM tbl_method";
+                                break;
+                            case "cmbField":
+                                query = "SELECT field_desc AS display, field_pk AS value FROM tbl_field;";
+                                break;
+                            case "cmbZone":
+                                query = "SELECT zone_desc AS display, zone_pk AS value FROM tbl_zone;";
+                                break;
+                            case "cmbSite":
+                                query = "SELECT site_desc AS display, site_pk AS value FROM tbl_site";
+                                break;
+                            case "cmbPrice":
+                                query = "SELECT amount AS display, price_pk AS value FROM tbl_price";
+                                break;
+                            default: break;
+                        }
+                        dp.PopulateCombo(query, comboBox, "display", "value");
+                    }
+                }
+
+            }
+            catch (Exception x)
+            {
+                MessageBox.Show(x.Message, "Initialize Combos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void InitializeControls()
+        {
+            try
+            {
+                current_state = State.Load;
+                current_task = Task.Project;
+                cbxProject.Checked = true;
+                InitializeCombos();
+
+                dtpBeg.Value = DateTime.Now.SubtractBusinessDays(30);
+                dtpEnd.Value = DateTime.Now;
+
+                gbxSample.Visible = false;
+
             }
             catch (Exception x)
             {
@@ -672,15 +598,7 @@ namespace Sterling_Lab
             }
             finally
             {
-                dtpBeg.Value = DateTime.Now.SubtractBusinessDays(30);
-                dtpEnd.Value = DateTime.Now;
-                CheckBox_CheckedChanged(cbxDate, EventArgs.Empty);
-                if(checktheboxes) 
-                { 
-                    cbxSampleInOffice.Checked = true;
-                    cbxSampleIsOpen.Checked = true;
-                }
-                lblTask.Text = "";
+                UpdateSample(current_state);
             }
         }
 
@@ -697,94 +615,67 @@ namespace Sterling_Lab
                     btn.BackColor = Color.Gray;
                 }
             }
+            lblPosition.Text = (current_row + 1) + " of " + (dgvDisplay.RowCount - 1);
         }
 
-        private void PopulateForm(string tablename)
+        private void PopulateForm(string query = "")
         {
-            string query = "SELECT * FROM tbl_";
             try
             {
-                switch (tablename)
+                if (current_state == State.Load || bs == null)
                 {
-                    case "project":
-                        query += tablename + " INNER JOIN tbl_company ON client_fk = company_pk WHERE ";
-                        if (clientID == 0)
-                            query += "is_reported = false;";
-                        else
-                            query += "company_pk = " + clientID + ";";
+                    return;
+                }
+                IsPopulating = true;
+                if (dgvDisplay.Rows.Count == 0 || query.Length > 0)
+                {
+                    query = GetSampleSelectQuery(current_task);
+                    dp.PopulateDataGridView(query, dgvDisplay, "project"); // crucial to make a new object
+                    this.bs.DataSource = dgvDisplay.DataSource;
+                    bs.MoveFirst();
+                }
+
+                // datagridview 
+                this.current_row = ut.SetRange(bs.Position, 0, dgvDisplay.Rows.Count);
+                this.IsPopulating = true;
+                DataGridViewRow row = dgvDisplay.Rows[current_row];
+                dgvDisplay.ClearSelection();
+                row.Selected = true;
+
+                this.projectID = Convert.ToInt32(row.Cells["project_pk"].Value.ToString());
+                this.clientID = Convert.ToInt32(row.Cells["client_fk"].Value.ToString());
+                string company_name = dp.GetStringFromDB("SELECT company_name FROM tbl_company WHERE company_pk = " + clientID);
+
+                switch (current_task)
+                {
+                    case Task.Project:
+                        DateTime dateVal = Convert.ToDateTime(row.Cells["date_initiated"].Value.ToString());
+                        gbxDisplay.Text = " Report for Client :: " + company_name + " :: Opened: " + dateVal;
+                        gbxSample.Text = "Sample Info for project #" + projectID;
+                        string project_number = row.Cells["project_number"].Value.ToString();
+                        //if (project_number.Length < 1)
+                        //    UpdateSample(State.Edit);
                         break;
-                    case "sample":
-                        if (task == Task.Project)
-                        {
-                            query += tablename + " WHERE project_fk = " + projectID + ";";
-                        }
-                        else
-                        {
-                            query += tablename + "c.company_pk, c.company_name, p.project_number, s.method_fk, s.sample_number, s.sample_type_fk, " +
-                                "s.date_collected, s.is_in_office, s.is_open, s.sample_notes,location_fk, " +
-                                "l.field_fk, l.zone_fk, l.site_fk, l.land_desc FROM " + tablename + 
-                                " INNER JOIN tbl_sample_type t ON s.sample_type_fk = t.sample_type_pk " +
-                                "INNER JOIN tbl_project p ON s.project_fk = p.project_pk " +
-                                "INNER JOIN tbl_location l ON s.location_fk = l.location_pk " +
-                                "INNER JOIN tbl_company c ON p.client_fk = c.company_pk WHERE ";
-                            if (sampleID > 0)
-                                query += "sample_pk = " + sampleID;
-                            else
-                                query += "is_open = true";
-                        }
+                    case Task.Sample:
+                        dateVal = Convert.ToDateTime(row.Cells["date_collected"].Value.ToString());
+                        gbxSearch.Text = "Sample: " + row.Cells["sample_number"].ToString() + " :: Client: " + company_name + " :: Date Collected: " + dateVal;
+                        gbxDisplay.Text = row.Cells["sample_number"].Value.ToString();
+                        cbxSampleInOffice.Checked = Convert.ToBoolean(row.Cells["is_in_office"].Value);
+                        cbxSampleIsOpen.Checked = Convert.ToBoolean(row.Cells["is_open"].Value);
+                        cmbMethod.SelectedValue = Convert.ToInt32(row.Cells["method_fk"].Value.ToString());
+                        cmbField.SelectedValue = Convert.ToInt32(row.Cells["field_fk"].Value.ToString());
+                        cmbZone.SelectedValue = Convert.ToInt32(row.Cells["zone_fk"].Value.ToString());
+                        cmbSite.SelectedValue = Convert.ToInt32(row.Cells["site_fk"].Value.ToString());
+                        mskDLS.Text = row.Cells["land_desc"].ToString();
+                        dtpCollected.Value = dateVal;
+                        txtSampleNotes.Text = row.Cells["sample_notes"].ToString();
                         break;
-                    case "sample_item":
-                        query = "SELECT * FROM tbl_sample_items WHERE sample_pk = " + sampleID;
+                    case Task.Item:
                         break;
                     default:
                         break;
                 }
-                if (!String.IsNullOrEmpty(query))
-                {
-                    DataTable dt = dp.GetDataTable(query, tablename);
-                    switch (tablename)
-                    {
-                        case "project":
-                            foreach (DataRow row in dt.Rows)
-                            {
-                                foreach (DataColumn col in dt.Columns)
-                                {
-                                    this.clientID = Convert.ToInt32(row["client_fk"]);
-                                    this.projectID = Convert.ToInt32(row["project_pk"]);
-
-                                    string dateVal = dp.GetDateString(row["date_initiated"].ToString());
-                                    gbxDisplay.Text = " Client :: " + row["company_name"].ToString() + " :: Opened: " + dateVal;
-                                    gbxSample.Text = "Sample Info for project #" + projectID;
-                                }
-                            }
-                            break;
-
-                        case "sample":
-                            foreach (DataRow row in dt.Rows)
-                            {
-                                foreach (DataColumn col in dt.Columns)
-                                {
-                                    this.clientID = Convert.ToInt32(row["client_fk"]);
-                                    gbxSearch.Text = "Sample: " + row["sample_number"].ToString() + " :: Client: " + row["company_name"].ToString() + " :: Date Collected: " + row["date_collected"].ToString();
-                                    gbxDisplay.Text = row["sample_number"].ToString();
-                                    cbxSampleInOffice.Checked = Convert.ToBoolean(row["is_in_office"]);
-                                    cbxSampleIsOpen.Checked = Convert.ToBoolean(row["is_open"]);
-                                    cmbMethod.SelectedItem = row["method_fk"];
-                                    cmbField.SelectedItem = row["field_fk"];
-                                    cmbZone.SelectedItem = row["zone_fk"];
-                                    cmbSite.SelectedItem = row["site_fk"];
-                                    mskDLS.Text = row["land_desc"].ToString();
-                                    dtpCollected.Value = Convert.ToDateTime(row["date_collected"]);
-                                    txtSampleNotes.Text = row["sample_notes"].ToString();
-                                }
-                            }
-                            break;
-                        case "sample_items":
-                            break;
-                        default:
-                            break;
-                    }
-                }
+                
             }
 
             catch (Exception x)
@@ -793,17 +684,19 @@ namespace Sterling_Lab
             }
             finally
             {
+                this.IsPopulating = false;
+
                 switch (tablename)
                 {
                     case "project":
-                        task = Task.Project; break;
+                        current_task = Task.Project; break;
                     case "sample":
-                        task = Task.Sample; break;
+                        current_task = Task.Sample; break;
                     case "sample_item":
-                        task = Task.Item;
+                        current_task = Task.Item;
                         break;
                 }
-                UpdateTask(task);
+                UpdateState(current_state);
             }
         }
 
@@ -815,35 +708,52 @@ namespace Sterling_Lab
             }
         }
 
-        private bool UpdateSample(State status)
+        private void AutoUpdateProjectNumbers()
+        {
+            // N.B. UPDATE tbl_project w/ actual PROJECT_NUMBER
+            ProjectNumberGenerator pn = new ProjectNumberGenerator();
+            this.project_number = pn.Generate(clientID, locationID, methodID);
+            string query = "UDATE " + tablename + " SET project_number = '" + this.project_number + "' WHERE project_pk = " + projectID + ";";
+        }
+
+        private bool UpdateSample(State status, string query = "")
         {
             try
             {
-                string query = "";
-                // N.B. UPDATE tbl_project w/ actual PROJECT_NUMBER
+                string query_beg = "SET FOREIGN_KEY_CHECKS=0;";
+                string query_end = "SET FOREIGN_KEY_CHECKS = 1;";
+                string tablename = ConvertTaskToString(current_task,true);
                 switch (status)
                 {
                     case State.Load:
+                        query = GetSampleSelectQuery(current_task);
+                        current_state = State.Navigate;
                         break;
+                    case State.New:                        
                     case State.Cancel:
-                        InitializeControls();                        break;
+                        InitializeControls(); 
+                        break;
+                    case State.Edit:
+                        break;
 
-                    case State.Save:
-                        if (task == Task.Project)
+                        case State.Delete:
+                            break;
+                    case State.Save: 
+                        if (current_task == Task.Project)
                         {
                             if (clientID == 0)
                                 throw new Exception("No client ID!");
                             if (locationID == 0)
                             {
                                 locationID = dp.GetID("SELECT location_pk FROM tbl_location WHERE client_fk = " + clientID + " AND site_fk = " + cmbSite.SelectedValue + ";");
-                                if(locationID == 0)
-                                {
-                                    query = "SET FOREIGN_KEY_CHECKS=0;INSERT INTO tbl_location VALUES (0," + clientID + "," + cmbField.SelectedValue + "," + cmbZone.SelectedValue + "," + cmbSite.SelectedValue + 
-                                      ",'" + mskDLS.Text + "',null);SET FOREIGN_KEY_CHECKS=1";
+                                if (locationID == 0)
+                                { // add a new location
+                                    query = "INSERT INTO tbl_location VALUES (0," + clientID + "," + cmbField.SelectedValue + "," + cmbZone.SelectedValue + "," 
+                                        + cmbSite.SelectedValue + ",'" + mskDLS.Text + "',null);";
                                     locationID = dp.ProcessData("", query, "location");
                                 }
                             }
-                            else if(locationID == 0)
+                            else if (locationID == 0)
                             {
                                 throw new Exception("No location ID!");
                             }
@@ -851,73 +761,49 @@ namespace Sterling_Lab
                             {
                                 methodID = dp.GetSelectedValue(cmbMethod);
                             }
-                            else if(methodID == 0)
-                                throw new Exception("No method ID!");
-                            tablename = "tbl_project";
-                            ProjectNumberGenerator pn = new ProjectNumberGenerator();
+                            else if (methodID == 0)
+                                throw new Exception("Choose a method!");
+                            
+                            // N.B. UPDATE tbl_project w/ actual PROJECT_NUMBER
+                            ProjectNumberGenerator pn = new ProjectNumberGenerator(); 
                             this.project_number = pn.Generate(clientID, locationID, methodID);
-                            query = "UDATE tbl_project SET project_number = '" + this.project_number + "' WHERE project_pk = " + projectID + ";";
-                            dp.ProcessData("", query, tablename);
+                            query = "UDATE " + tablename + " SET project_number = '" + this.project_number + "' WHERE project_pk = " + projectID + ";";
                         }
                         //tbl_sample: sample_pk, batch_fk, project_fk, method_fk, location(site)_fk, sample_number, date_collected, sample_notes, is_in_office, Is_open (10 fields)..
-                        if (task == Task.Sample)
+                        if (current_task == Task.Sample)
                         {
-                            tablename = "tbl_sample";
                             SampleNumberGenerator sn = new SampleNumberGenerator();
                             this.sample_number = sn.Generate();
-                            query = "SET foreign_key_checks=0;INSERT INTO tbl_sample VALUES (0,null," + this.projectID + "," + methodID + "," + locationID + ",'" + sample_number +
-                                "','" + dtpBeg.Value + "','" + txtSampleNotes.Text + "'," + cbxSampleInOffice.Checked + "," + cbxSampleIsOpen.Checked + ");SET foreign_key_checks=1;";
-                            this.sampleID = dp.ProcessData("", query, tablename); // ProcessData: select, query, tablename (to identify error source)
-                            sample_saved = (sampleID > 0);
+                            query = "INSERT INTO " + tablename + " VALUES (0,null," + this.projectID + "," + methodID + "," + locationID + ",'" + sample_number +
+                                "','" + dtpBeg.Value + "','" + txtSampleNotes.Text + "'," + cbxSampleInOffice.Checked + "," + cbxSampleIsOpen.Checked + ");";
                         }
-                        else if (task == Task.Item)
+                        else if (current_task == Task.Item)
                         {
-                            tablename = "tbl_sample_items";
-                            query = "INSERT INTO tbl_sample_items VALUES (0," + sampleID + "null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);";
-                            this.sampleItemID = dp.ProcessData("", query, tablename); // ProcessData: select, query, tablename (to identify error source)
-                            sample_saved = (sampleItemID > 0);
+                            query = "INSERT INTO " + tablename + " VALUES (0," + sampleID + "null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);"; // 17 cols
+
                         }
                         break;
-                    case State.New:
-                        InitializeControls();
-                        break;
-                    case State.Edit:
-                        if (task == Task.Project)
-                        {
-                            tablename = "tbl_project";
-                            query = "UPDATE tbl_project SET project_number = '" + project_number + "' WHERE project_pk = " + projectID + ";";
-                        }
-                        else if (task == Task.Sample)
-                        {
-                            tablename = "tbl_sample";
-                            //tbl_sample: sample_pk, batch_fk, project_fk, location(site)_fk, sample_number, date_collected, sample_notes, is_in_office, Is_open (9 fields)..
-                            query = "UPDATE tbl_sample SET batch_pk = null, project_fk = " + projectID + ",location_fk = " + locationID + "," +
-                                ", sample_number = '" + sample_number + "',date_collected = '" + dtpBeg.Value + "', sample_notes = '" + txtSampleNotes.Text +
-                                "',is_in_office = " + cbxSampleInOffice.Checked + ",is_open = " + cbxSampleIsOpen + " WHERE sample_pk = " + sampleID + ";";
-                        }
-                        else
-                        {
-                            // sample item data updated in the datagrid
-                        }
-                        dp.ProcessData("", query, tablename);
-                        break;
+   
                     default:
                         break;
                 }
+                int id = dp.ProcessData("", query_beg + query + query_end, tablename);
+                sample_saved = (id > 0);
             }
             catch (Exception x)
             {
-                MessageBox.Show(x.Message, "Sample Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(x.Message, "DB Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 sample_saved = false;
             }
             finally
             {
                 if (sample_saved)
                 {
-                    UpdateState(State.Navigate);
-                    MessageBox.Show("Saved!", "Form State", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    current_state = State.Navigate;
+                    MessageBox.Show("Saved!", "Form Sample", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
+            PopulateForm();
             return this.sample_saved;
         }
 
@@ -927,9 +813,7 @@ namespace Sterling_Lab
             {
                 case State.Load:
                     form_State = "Load";
-                    InitializeControls();
                     status = State.Navigate;
-                    UpdateState(status);
                     break;
                 case State.Navigate:
                     form_State = "Navigate";
@@ -974,34 +858,10 @@ namespace Sterling_Lab
                 default:
                     break;
             }
-            this.state = status;
+            this.current_state = status;
             lblDisplay.Text = "Sample :: " + form_State;
-            UpdateSample(status);
+            lblTask.Text = "Task :: " + ConvertTaskToString(current_task);
             DataControlsStatusChanged();
-            UpdateTask(task);
-        }
-
-        private void UpdateTask(Task temp)
-        {
-            task = temp;
-            switch (task)
-            {
-                case Task.Project:
-                    process = "Project";
-                    break;
-                case Task.Sample:
-                    process = "Sample";
-                    break;
-                case Task.Item:
-                    process = "Item";
-                    break;
-                default: break;
-            }
-            lblTask.Text = form_task;
-            if (task == Task.Project)
-                gbxDataControls.Text = "Sample";
-            else             
-                gbxDataControls.Text = form_task;            
         }
     }
 }
