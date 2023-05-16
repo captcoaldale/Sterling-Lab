@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using Spire.Pdf.Exporting.XPS.Schema;
 using System.Diagnostics.Contracts;
+using System.CodeDom;
 
 namespace Sterling_Lab
 {
@@ -21,11 +22,15 @@ namespace Sterling_Lab
         private int priceID = 5; // standard 190.00
         private int priorityID;
         private int projectID;
-        private bool project_saved;
+        private string file_name;
+        private string project_number;
+
         private int projectTypeID;
         private ComboBox last_focused;
         private bool IsDirty = false; // keys pressed
         private bool IsPopulating = false;
+        private bool IsSearching = false;
+        private bool project_saved;
 
         private int currentRow;
 
@@ -38,7 +43,7 @@ namespace Sterling_Lab
         private string form_State;
         private State state { get; set; }
 
-        enum Task { Client, Date, Number, Open }
+        enum Task { Client, Date, ID, Number, Open }
         private string form_task;
         private Task current_task { get; set; }
         private Task previous_task { get; set; }
@@ -81,7 +86,6 @@ namespace Sterling_Lab
         }
         // Data
 
-
         private void btnNew_Click(object sender, EventArgs e)
         {
             UpdateProject(State.New);
@@ -89,15 +93,14 @@ namespace Sterling_Lab
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            UpdateProject(State.Edit); // don't change anything until Save!
+            UpdateState(State.Edit); // don't change anything until Save!
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
             if (IsDirty)
             {
-                current_task = Task.Number;
-                ConvertTaskToString(current_task);
+                ConvertTaskToString(Task.ID);
                 UpdateProject(State.Save);
             }
         }
@@ -114,8 +117,11 @@ namespace Sterling_Lab
 
         private void btnSearch_Click(object sender, EventArgs e)
         {
-            dgvDisplay.DataSource = null;
-            UpdateProject(State.Navigate);
+            IsSearching = true;
+            if (current_task == Task.Number)
+                UpdateProject(State.Navigate); // prepare to enter project number
+            else
+                UpdateProject(State.Load);
         }
 
         private void CheckBox_Click(object sender, EventArgs e)
@@ -123,8 +129,7 @@ namespace Sterling_Lab
             if (IsPopulating) { return; }
             try
             {
-                int count = 0;
-                
+                int count = 0;               
                 CheckBox sendCheck = (CheckBox)sender;
                 foreach (Control ctl in gbxSearch.Controls)
                 {
@@ -136,9 +141,15 @@ namespace Sterling_Lab
                             case "cbx":
                                 CheckBox cbx = (CheckBox)ctl; // strange but this worsk (cannot declare new chbx after an if ... !
                                 current_task = ConvertStringToTask(ctl.Name);
+                                if (current_task == Task.Number)
+                                {
+                                    ClearControls();
+                                }
                                 cbx.Checked = true;
+                                IsSearching = true;
                                 break;
-                            default: break;
+                            default: 
+                                break;
                         }
                     }
                     else
@@ -152,7 +163,10 @@ namespace Sterling_Lab
                             case "txt":
                             case "dtp":
                             case "cmb":
-                                ctl.Enabled = false;
+                                //if (current_task == Task.Open)
+                                //    ctl.Enabled = true;
+                                //else
+                                    ctl.Enabled = false;
                                 break;
                             default: //(but not buttons and labels)
                                 ctl.Enabled = true;
@@ -170,6 +184,7 @@ namespace Sterling_Lab
             {
                 // prepare for update
                 this.IsDirty = (state == State.Edit);
+                ConvertTaskToString(current_task);
             }
         }
 
@@ -183,7 +198,9 @@ namespace Sterling_Lab
                     {
                         if (ctl is ComboBox || ctl is TextBox)
                         {
-                            if (ctl.Text.Length > 0)
+                            if (ctl.Name == "txtProject_Number")
+                                ctl.Text = "Type 3-4 chars of Proj Num.";
+                                else
                                 ctl.Text = "";
                         }
                         if (ctl is DateTimePicker)
@@ -252,15 +269,13 @@ namespace Sterling_Lab
             }
             if (name == "client")
             {
-                current_task = Task.Client;
-                ConvertTaskToString(current_task);
-                state = State.Navigate;
-                UpdateProject(state);
+                cmbAgent.Enabled = (state == State.Edit);
+                ConvertTaskToString(Task.Client);                
+                UpdateProject(State.Load);
             }
             else if(state == State.Edit) // changes to other combos need saving 
             {
-                current_task = Task.Number;
-                ConvertTaskToString(current_task);
+                ConvertTaskToString(Task.Number);
                 IsDirty = true;
                 UpdateState(state); // Combo Selected Index Changed.
             }
@@ -272,7 +287,7 @@ namespace Sterling_Lab
             if (state != State.Edit)
                 return;
             ComboBox comboBox = (ComboBox)sender;
-            string name = comboBox.Name.Remove(0, 3).ToLower();
+            string name = comboBox.Name.Remove(0, 3).ToLower(); // trim prefix (txt..., cmb...)
             if (IsDirty && ((state == State.Edit || state == State.Save)))
             {                
                 try
@@ -314,16 +329,20 @@ namespace Sterling_Lab
         private string ConvertTaskToString(Task task)
         {
             this.form_task = "";
+            previous_task = current_task;
             switch (task)
             {
-                case Task.Number:
-                    form_task = "Project";
+                case Task.Client:
+                    form_task = "Client";
                     break;
                 case Task.Date:
                     form_task = "Date";
                     break;
-                case Task.Client:
-                    form_task = "Client";
+                case Task.ID:
+                    form_task = "ID";
+                    break;
+                case Task.Number:
+                    form_task = "Number";
                     break;
                 case Task.Open:
                     form_task = "Open";
@@ -331,30 +350,37 @@ namespace Sterling_Lab
                 default:
                     break;
             }
+            this.current_task = task;
             return form_task;
         }
 
         private Task ConvertStringToTask(string task)
-        {
-            string name = task.Substring(3);
+        { 
+            previous_task = this.current_task;
+           
+            string name = task.ToString().Substring(3);
             Task tempTask = Task.Number;
             switch (name)
             {
-                case "Project":
-                    //alread initialized
+                case "Client":
+                    tempTask = Task.Client;
                     break;
                 case "Date":
                     tempTask = Task.Date;
                     break;
-                case "Client":
-                    tempTask = Task.Client;
+                case "ID":
+                    tempTask = Task.ID;
                     break;
                 case "Open":
                     tempTask = Task.Open;
                     break;
+                case "Number":
+                    //Project (Task.Number) already initialized
+                    break;
                 default:
                     break;
             }
+            this.current_task = tempTask;
             return tempTask;
         }
 
@@ -372,18 +398,20 @@ namespace Sterling_Lab
                 }
             }
             lblPosition.Text = (currentRow + 1) + " of " + (dgvDisplay.RowCount - 1);
+            if (!IsPopulating)
+            {
+                //cbxNumber.Checked = true;
+                //cbxOpen.Checked = false;
+            }
         }
 
         private void dgvDisplay_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             bs.Position = e.RowIndex; // sync binding source to gridrow
-            if (projectID < 1)
-                this.projectID = Convert.ToInt32(dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString());
-
-            current_task = Task.Number; // projects in dgv
-            ConvertTaskToString(current_task);
-            previous_task = Task.Client;
-
+            this.projectID = Convert.ToInt32(dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString());
+            previous_task = current_task;
+            current_task = Task.ID; // projects in dgv
+            ConvertTaskToString(current_task);    
             UpdateProject(State.Navigate);
         }
 
@@ -399,11 +427,8 @@ namespace Sterling_Lab
 
         private void DatePicker_ValueChanged(object sender, EventArgs e)
         {
-            if (state != State.Navigate)
-                return;
-            bool IsValidTime = false;
             if (state == State.Load)
-            return;
+                return;
             try
             { 
                 DateTimePicker dtp = (DateTimePicker)sender;
@@ -411,8 +436,12 @@ namespace Sterling_Lab
                 {
                     case "dtpBeg":
                     case "dtpEnd":
+                        current_task = Task.Date;
+                        ConvertTaskToString(current_task);
+                        break;
                     default:
-                        IsValidTime = dp.IsDate(dtp.Value.ToString());
+                        if (state == State.Edit)
+                            this.IsDirty = true;
                         break;
                 }
             }
@@ -420,16 +449,10 @@ namespace Sterling_Lab
             {
                 MessageBox.Show(x.Message,"DatePicker Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            finally 
+            finally
             {
-                if (state == State.Edit)                
-                    this.IsDirty = true;                
+                UpdateProject(state);
             }
-            current_task = Task.Date;
-            ConvertTaskToString(current_task);
-
-            //if (IsValidTime)
-            //    UpdateProject(state);
         }
 
         private void GetAgentForClient(int clientid)
@@ -446,12 +469,12 @@ namespace Sterling_Lab
             }
         }
 
-        private string GetProjectSelectQuery(Task current_task)
+        private string GetProjectSelectQuery(Task current_task, bool UseLike = false)
         {
             //if (state == State.Load)
             //    return null;
             string query = "SELECT p.project_pk, p.client_fk, c.company_name AS client_desc, p. agent_fk, CONCAT(l.first_name,' ',l.last_name) AS agent_desc, " +
-                "p.project_type_fk, t.project_type_desc, p.objective_fk, o.objective_desc, p.priority_requested_fk, r.priority_desc AS priority_requested_desc, " +
+                "p.file_name, p.project_number, p.project_type_fk, t.project_type_desc, p.objective_fk, o.objective_desc, p.priority_requested_fk, r.priority_desc AS priority_requested_desc, " +
                 "p.date_initiated, p.date_report_expected, p.is_reported, p.bill_cust, " +
                 "p.bill_cust_notes, p.project_notes FROM tbl_project p " +
                 "INNER JOIN tbl_company c ON p.client_fk = c.company_pk " +
@@ -467,13 +490,17 @@ namespace Sterling_Lab
                     query += "client_fk = " + clientID + ";";
                     break;
                 case Task.Date:
-                    query += "date_initiated BETWEEN '" + dtpBegDate.Value + "' AND '" + dtpEndDate.Value + "'";
+                    query += "date_initiated BETWEEN '" + dtpBegDate.Value + "' AND '" + dtpEndDate.Value + "';";
                     break;
                 case Task.Open:
                     query += "is_reported = false;";
                     break;
                 case Task.Number:
-                    query += "project_pk = " + projectID + ";";
+                    if (UseLike)
+                        query += "project_number LIKE " + '"' + '%' + txtProject_Number.Text + '%' + '"' + ";";
+                    break;
+                case Task.ID:
+                        query += "project_pk = " + projectID + ";";
                     break;
                 default:
                     break;
@@ -540,6 +567,8 @@ namespace Sterling_Lab
                 // time
                 dtpBegDate.Value = DateTime.Now.SubtractBusinessDays(30);
                 dtpEndDate.Value = DateTime.Now;
+                dtpDate_Initiated.Value = DateTime.Now;
+                dtpDate_Report_Expected.Value = DateTime.Now.AddBusinessDays(5);
 
                 // combos
                 InitializeCombos(gbxSearch);
@@ -548,11 +577,22 @@ namespace Sterling_Lab
                 //default search 
                 current_task = Task.Open;
                 ConvertTaskToString(current_task);
+                foreach (Control ctl in gbxSearch.Controls)
+                {
+                    if (ctl is CheckBox) 
+                    {
+                        CheckBox checkBox = (CheckBox)ctl;
+                        checkBox.Checked = false;
+                    }
+                    else
+                        ctl.Enabled = false;
+                }
                 cbxOpen.Checked = true;
+                IsSearching = true;
 
-                txtNumber.Text = "Enter Project Number";
+                txtProject_Number.Text = "Enter Project Number";
 
-                UpdateProject(State.Navigate);
+                UpdateProject(state);
             }
             catch (Exception ex) 
             { 
@@ -568,59 +608,58 @@ namespace Sterling_Lab
         //date_initiated, date_reported_expected, is_reported,  bill_cust, bill_notes, proj_notes (14 fields)
         private void PopulateForm(string query = "")
         {
-            if(state == State.Load || bs == null) 
-            { 
-                return; 
-            }
             IsPopulating = true;
             try
             {
-                 if(dgvDisplay.Rows.Count == 0 || query.Length>0)
-                 {
-                    query = GetProjectSelectQuery(current_task);
-                    dp.PopulateDataGridView(query, dgvDisplay,"project"); // crucial to make a new object
-                    this.bs.DataSource = dgvDisplay.DataSource;
-                    bs.MoveFirst();
-                 }
-
-                // datagridview 
-                this.currentRow = ut.SetRange(bs.Position,0,dgvDisplay.Rows.Count);
-                
-                //populate form controls
-                DataGridViewRow row = dgvDisplay.Rows[currentRow];
-                dgvDisplay.ClearSelection();
-                row.Selected = true;
-                
-                this.projectID = Convert.ToInt32(row.Cells["project_pk"].Value.ToString());
-                this.clientID = Convert.ToInt32(row.Cells["client_fk"].Value.ToString());
-                this.clientID = Convert.ToInt32(row.Cells["client_fk"].Value.ToString());
-                this.agentID = Convert.ToInt32(row.Cells["agent_fk"].Value.ToString());
-                this.clientID = Convert.ToInt32(row.Cells["client_fk"].Value.ToString());
-                this.clientID = Convert.ToInt32(row.Cells["client_fk"].Value.ToString());
-                this.objectiveID = Convert.ToInt32(row.Cells["objective_fk"].Value.ToString());
-                this.priorityID = Convert.ToInt32(row.Cells["priority_requested_fk"].Value.ToString());
-                this.projectTypeID = Convert.ToInt32(row.Cells["project_type_fk"].Value.ToString());
-                string date_initiated = row.Cells["date_initiated"].Value.ToString();
-
-                cmbClient.SelectedValue = clientID;
-                cmbAgent.SelectedValue = agentID;
-                cmbObjective.SelectedValue = objectiveID;
-                cmbProject_Type.SelectedValue = projectTypeID;
-                cmbPriority_Requested.SelectedValue = priorityID;
-
-                txtBill_Cust.Text = row.Cells["bill_cust_notes"].Value.ToString();
-                txtProject.Text = row.Cells["project_notes"].Value.ToString();
-
-                cbxBill_Cust.Checked = Convert.ToBoolean(row.Cells["bill_cust"].Value);
-                cbxIs_Reported.Checked = Convert.ToBoolean(row.Cells["is_reported"].Value);
-
-                object company = dp.GetDataItem("SELECT company_name FROM tbl_company WHERE company_pk = " + this.clientID + ";");
-                if (company != null)
+                if (dgvDisplay.Rows.Count == 0 || state == State.Load)
                 {
-                    this.company_name = company.ToString();
+                    //dgvDisplay.DataSource = null; // start fresh
+                    query = GetProjectSelectQuery(current_task);
+                    //MessageBox.Show(query, "SQL", MessageBoxButtons.OK,MessageBoxIcon.Information); // Used b/c debug crashed w/ dates
+                    // populate the datagridview and sync w/ form controls
+                    state = State.Navigate;
+                    dp.PopulateDataGridView(query, dgvDisplay,bs, "project"); // crucial to make a new object
                 }
-                gbxDisplay.Text = "Project #" + projectID + " :: Client :: " + company_name + " :: Project Opened: " + date_initiated;
-                gbxProject.Text = "Details for Project #" + projectID;
+                if (bs.Count > 0)
+                {
+                    // adjust datagridview rows
+                    this.currentRow = ut.SetRange(bs.Position, 0, dgvDisplay.Rows.Count);
+                    dgvDisplay.ClearSelection();
+                    dgvDisplay.Rows[currentRow].Selected = true;
+
+                    //populate form controls
+                    this.projectID = Convert.ToInt32(dgvDisplay.Rows[currentRow].Cells["project_pk"].Value.ToString());
+                    this.file_name = dgvDisplay.Rows[currentRow].Cells["file_name"].Value.ToString();
+                    this.project_number = dgvDisplay.Rows[currentRow].Cells["project_number"].Value.ToString();
+                    this.clientID = Convert.ToInt32(dgvDisplay.Rows[currentRow].Cells["client_fk"].Value.ToString());
+                    this.agentID = Convert.ToInt32(dgvDisplay.Rows[currentRow].Cells["agent_fk"].Value.ToString());
+                    this.objectiveID = Convert.ToInt32(dgvDisplay.Rows[currentRow].Cells["objective_fk"].Value.ToString());
+                    this.priorityID = Convert.ToInt32(dgvDisplay.Rows[currentRow].Cells["priority_requested_fk"].Value.ToString());
+                    this.projectTypeID = Convert.ToInt32(dgvDisplay.Rows[currentRow].Cells["project_type_fk"].Value.ToString());
+                    string date_initiated = dgvDisplay.Rows[currentRow].Cells["date_initiated"].Value.ToString();
+
+                    cmbClient.SelectedValue = clientID;
+                    cmbAgent.SelectedValue = agentID;
+                    //cmbAgent.Enabled = true;
+                    cmbObjective.SelectedValue = objectiveID;
+                    cmbProject_Type.SelectedValue = projectTypeID;
+                    cmbPriority_Requested.SelectedValue = priorityID;
+                    if (current_task != Task.Number)
+                        txtProject_Number.Text = dgvDisplay.Rows[currentRow].Cells["project_number"].Value.ToString();
+                    txtBill_Cust.Text = dgvDisplay.Rows[currentRow].Cells["bill_cust_notes"].Value.ToString();
+                    txtProject_Notes.Text = dgvDisplay.Rows[currentRow].Cells["project_notes"].Value.ToString();
+
+                    cbxBill_Cust.Checked = Convert.ToBoolean(dgvDisplay.Rows[currentRow].Cells["bill_cust"].Value);
+                    cbxIs_Reported.Checked = Convert.ToBoolean(dgvDisplay.Rows[currentRow].Cells["is_reported"].Value);
+
+                    object company = dp.GetDataItem("SELECT company_name FROM tbl_company WHERE company_pk = " + this.clientID + ";");
+                    if (company != null)
+                    {
+                        this.company_name = company.ToString();
+                    }
+                    gbxDisplay.Text = "Project #" + projectID + " :: Client :: " + company_name + " :: Project Opened: " + date_initiated;
+                    gbxProject.Text = "Details for Project #" + projectID;
+                }
             }
             catch (Exception x)
             {
@@ -628,7 +667,10 @@ namespace Sterling_Lab
             }
             finally
             {
+                query = "";
                 IsPopulating = false;
+                IsSearching = false;
+                state = State.Navigate;
                 UpdateState(state);
             }
         }
@@ -637,15 +679,15 @@ namespace Sterling_Lab
         {
             if (Char.IsLetterOrDigit(e.KeyChar))
             {
-                if (!IsDirty)
+                if (!IsDirty && state == State.Edit)
                 {
                     IsDirty = true;
-                    UpdateState(State.Edit);
+                    UpdateState(state);
                 }
             }
             else if(e.KeyChar == (char)Keys.Return) // enter key
             {
-                current_task = Task.Number;
+                //current_task = Task.Number;
                 ConvertTaskToString(current_task);
                 UpdateProject(State.Save);
             }
@@ -653,21 +695,25 @@ namespace Sterling_Lab
 
         private void Project_KeyUp(object sender, KeyEventArgs e)
         {
-           switch (e.KeyCode)
+            Control ctl = sender as Control;
+            switch (e.KeyCode)
             {
                 case Keys.Enter:
-                    if (IsDirty)
+                    if (ctl.Name == "txtProject_Number")
                     {
                         current_task = Task.Number;
+                        UpdateProject(State.Navigate, true);
+                    }
+                    else if (IsDirty)
+                    {
                         ConvertTaskToString(current_task);
                         UpdateProject(State.Save);
                     }
                     break;
                 case Keys.F2:
                     UpdateState(State.Edit);
-                    break;
-            }
-
+                    break;           
+           }
         }
 
         public void StoreFocusedCombo(object sender, EventArgs e)
@@ -681,68 +727,77 @@ namespace Sterling_Lab
 
         private void txtProject_Number_Enter(object sender, EventArgs e)
         {
-            if (txtNumber.Text.Length > 0)
+            if (txtProject_Number.Text.Length > 0)
             {
-                txtNumber.Font = new Font("Lucida Bright", 12, FontStyle.Regular);
-                txtNumber.Text = "";
+                txtProject_Number.Font = new Font("Lucida Bright", 12, FontStyle.Regular);
+                txtProject_Number.Text = "";
             }
         }
 
         private void txtProject_Number_Leave(object sender, EventArgs e)
         {
-            if (txtNumber.Text.Trim() == "")
+            if (txtProject_Number.Text.Trim() == "")
             {
-                txtNumber.Font = new Font("Lucida Bright", 12, FontStyle.Italic);
-                txtNumber.Text = "Enter Project Number";
+                txtProject_Number.Font = new Font("Lucida Bright", 12, FontStyle.Italic);
+                txtProject_Number.Text = "Type 3-4 chars of Proj Num";
             }
         }
-            // tbl_project: project_pk, file_name, project_number, client_fk, agent_fk, project_type_fk, objective_fk, date_initiated,date_report_expected,
-            // is_reported, priority_requested_fk, billCust, bill_cust_notes, project_notes (14 fields)
+        // tbl_project: project_pk, file_name, project_number, client_fk, agent_fk, project_type_fk, objective_fk, date_initiated,date_report_expected,
+        // is_reported, priority_requested_fk, billCust, bill_cust_notes, project_notes (14 fields)
 
-            // N.B. in this UC we supply null values for PROJECT_NUMBER AND FILE_NAME -- these values will be added in the SAMPLE UserControl where we have access to them.
-            private void UpdateProject(State status, string query = "")
+        // N.B. in this UC we supply null values for PROJECT_NUMBER AND FILE_NAME -- these values will be added in the SAMPLE UserControl where we have access to them.
+        private void UpdateProject(State status, bool UseLike = false, string query = "")
         {
-            if (status == State.Load)
-                return;
             int rows_affected = 0;
             try
             {
+                if ((current_task == Task.Client && clientID == 0) || current_task == Task.Number)
+                {
+                    UseLike = true;
+                }
                 switch (status)
                 {
                     case State.Load:
-                        state = State.Navigate;
                         break;
                     case State.Edit:
-                        break;
                     case State.Navigate:
-                        query = GetProjectSelectQuery(current_task);
+                        if (current_task == Task.Number) // by project_NUMBER
+                        {
+                            if (IsSearching && !txtProject_Number.Text.ContainsAny("Enter","Type"))
+                            {
+                                query = GetProjectSelectQuery(current_task, true);
+                            }
+                            break;
+                        }                           
+                        else // get by projectID
+                            query = GetProjectSelectQuery(Task.ID);
                         break;
                     case State.Cancel:
                         ClearControls();
                         status = State.Navigate;
                         break;
                     case State.New:
-                        ClearControls();
-                        query = "SET foreign_key_checks=0;INSERT INTO tbl_project VALUES (0,null,null,"
+                        query = "INSERT INTO tbl_project VALUES (0,null,null,"
                            + this.clientID + "," + agentID + "," + cmbProject_Type.SelectedValue + "," + cmbObjective.SelectedValue + "," + cmbPriority_Requested.SelectedValue + ",'"
                            + dtpDate_Initiated.Value + "','" + dtpDate_Report_Expected.Value.AddBusinessDays(5) + "'," + cbxIs_Reported.Checked + "," + cbxBill_Cust.Checked + ",'"
-                           + txtBill_Cust.Text + "','" + txtProject.Text + "');SET foreign_key_checks=1;";
+                           + txtBill_Cust.Text + "','" + txtProject_Notes.Text + "');";
+                        current_task = Task.Client;
                         break;
                     case State.Save:
-                        query = "SET foreign_key_checks=0;UPDATE tbl_project SET file_name = null, project_number = null, client_fk = " + clientID + ", agent_fK = " + agentID +
+                        query = "UPDATE tbl_project SET file_name = '" + file_name + "', project_number = '" + txtProject_Number.Text + "', client_fk = " + clientID + ", agent_fK = " + agentID +
                             ", project_type_fk = " + projectTypeID + ", objective_fk = " + objectiveID + ", date_initiated = '" + dtpDate_Initiated.Value + "', date_report_expected = '" +
                             dtpDate_Report_Expected.Value + "', is_reported = " + cbxIs_Reported.Checked + ", priority_requested_fk = " + priorityID + ", bill_cust = " + cbxBill_Cust.Checked +
-                            ", bill_cust_notes = '" + txtBill_Cust.Text + "', project_notes = '" + txtProject.Text + "' WHERE ";
+                            ", bill_cust_notes = '" + txtBill_Cust.Text + "', project_notes = '" + txtProject_Notes.Text + "' WHERE ";
                         switch (current_task)
                         {
-                            case Task.Number:
+                            case Task.ID:
                                 query += "project_pk = " + projectID;
                                 break;
                             case Task.Client:
                                 query += "client_fk = " + clientID;
                                 break;
                         }
-                        query += "; SET foreign_key_checks = 1;";
+                        query += ";";
                         break;
                     case State.Delete:
                         query = "DELETE FROM tbl_project WHERE project_pk = " + projectID + ";";
@@ -750,25 +805,37 @@ namespace Sterling_Lab
                     default:
                         break;
                 }
-                // only process new, update, delete
+                // process new, update, delete
+                string tablename = "project";
                 switch (status)
                 {
-                    case State.New:
-                    case State.Save:
+                    case State.Navigate: // pass query on to PopulateForm()
+                    case State.Edit:
+                            break;
                     case State.Delete:
+                        dp.ProcessData("",query, tablename);
+                        rows_affected = dp.RowsAffected;
+                        if (rows_affected > 0)
+                            MessageBox.Show("Project #" + projectID + " removed.", "Delete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        status = State.Load;
+                        break;
+                    case State.New:
+                        if(clientID > 0)
+                            this.projectID = dp.ProcessData("", query, tablename);
+                        if (projectID > 0)
+                        {
+                            query = GetProjectSelectQuery(Task.Client);
+                            status = State.Load;
+                        }
+                        break;
+                    case State.Save:      
                         if ((projectID > 0 || clientID > 0) && (query.Length > 0)) // Update Project
                         {
-                            this.projectID = dp.ProcessData("", query, "project"); // parms: select, query, tablename (to identify error source)
+                            this.projectID = dp.ProcessData("", query, tablename); // parms: select, query, tablename (to identify error source)
                             rows_affected = dp.RowsAffected;
                             if (project_saved = (projectID > 0))
                             {
                                 MessageBox.Show("Project Saved!", "Form State", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                                IsDirty = false;
-                                cbxClient.Checked = cbxDate.Checked = cbxOpen.Checked = false;
-                                status = State.Navigate;
-                                current_task = Task.Open;
-                                ConvertTaskToString(current_task);
-                                dgvDisplay.DataSource = null;
                             }
                             else
                                 throw new Exception("Project not saved!");
@@ -785,9 +852,17 @@ namespace Sterling_Lab
             }
             finally // update form values
             {
+                if(project_saved)
+                {
+                    IsDirty = false;
+                    query = "";
+                    dgvDisplay.DataSource = null;
+                    current_task = previous_task;
+                    status = State.Load;
+                }
                 this.state = status;
             }
-            PopulateForm(query); // refresh w/ new info
+            PopulateForm(); // refresh w/ new info
         }
 
         private void UpdateState(State status)
@@ -796,7 +871,7 @@ namespace Sterling_Lab
             {
                 case State.Load:
                     form_State = "Load";
-                    InitializeControls();                  
+                    status = State.Navigate;
                     break;
                 case State.Navigate:
                     form_State = "Navigate";
@@ -804,7 +879,8 @@ namespace Sterling_Lab
                     btnEdit.Enabled = bs.DataSource != null;
                     btnSave.Enabled = false;
                     btnCancel.Enabled = false;
-                    btnDelete.Enabled = false;
+                    btnDelete.Enabled = (projectID > 0);
+                    btnSearch.Enabled = true;
                     gbxBill_Client.Enabled = false;
                     gbxProject.Enabled = false;
                     gbxDataControls.Enabled = true;
@@ -813,6 +889,7 @@ namespace Sterling_Lab
                     form_State = "Cancel";
                     btnNew.Enabled = true;
                     btnEdit.Enabled = true;
+                    btnSearch.Enabled = true;
                     btnSave.Enabled = false;
                     btnCancel.Enabled = false;
                     btnDelete.Enabled = false;
@@ -834,9 +911,11 @@ namespace Sterling_Lab
                     btnDelete.Enabled = true;
                     btnNew.Enabled = false;
                     btnEdit.Enabled = false;
+                    btnSearch.Enabled=true;
                     gbxProject.Enabled = true;
                     gbxBill_Client.Enabled = true;
                     gbxDataControls.Enabled = true;
+                    cmbAgent.Enabled = true; // (state == State.Edit); // && (current_task == Task.Client));
                     this.project_saved = false;
                     break;
                 case State.New:
@@ -846,6 +925,7 @@ namespace Sterling_Lab
                     btnCancel.Enabled = true;
                     btnDelete.Enabled = false;
                     btnSave.Enabled = false;
+                    btnSearch.Enabled = false;
                     gbxProject.Enabled = true;
                     gbxBill_Client.Enabled = true;
                     gbxDataControls.Enabled = true;
@@ -858,6 +938,7 @@ namespace Sterling_Lab
                     btnCancel.Enabled = true;
                     btnDelete.Enabled = false;
                     btnSave.Enabled = false;
+                    btnSearch.Enabled = false;
                     gbxProject.Enabled = false;
                     gbxBill_Client.Enabled = false;
                     gbxDataControls.Enabled = false;

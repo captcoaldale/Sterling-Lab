@@ -44,8 +44,11 @@
             this.txtSampleNotes = new System.Windows.Forms.TextBox();
             this.lblSampleNotes = new System.Windows.Forms.Label();
             this.gbxSample = new System.Windows.Forms.GroupBox();
+            this.lblType = new System.Windows.Forms.Label();
+            this.cmbSample_Type = new System.Windows.Forms.ComboBox();
             this.lblPrice = new System.Windows.Forms.Label();
             this.cmbPrice = new System.Windows.Forms.ComboBox();
+            this.btnGenerateProjectNumbers = new System.Windows.Forms.Button();
             this.dtpCollected = new System.Windows.Forms.DateTimePicker();
             this.lblCollected = new System.Windows.Forms.Label();
             this.lblTest = new System.Windows.Forms.Label();
@@ -58,16 +61,15 @@
             this.lblSite = new System.Windows.Forms.Label();
             this.cmbSite = new System.Windows.Forms.ComboBox();
             this.gbxSearch = new System.Windows.Forms.GroupBox();
-            this.cbxNumber = new System.Windows.Forms.CheckBox();
             this.cbxItem = new System.Windows.Forms.CheckBox();
             this.cbxDate = new System.Windows.Forms.CheckBox();
             this.cbxSample = new System.Windows.Forms.CheckBox();
             this.cbxProject = new System.Windows.Forms.CheckBox();
             this.btnSearch = new System.Windows.Forms.Button();
             this.lblEnd = new System.Windows.Forms.Label();
-            this.dtpEnd = new System.Windows.Forms.DateTimePicker();
+            this.dtpEnd_Date = new System.Windows.Forms.DateTimePicker();
             this.lblBeg = new System.Windows.Forms.Label();
-            this.dtpBeg = new System.Windows.Forms.DateTimePicker();
+            this.dtpBeg_Date = new System.Windows.Forms.DateTimePicker();
             this.gbxNavControls = new System.Windows.Forms.GroupBox();
             this.lblPosition = new System.Windows.Forms.Label();
             this.btnEnd = new System.Windows.Forms.Button();
@@ -105,7 +107,7 @@
             this.gbxDataControls.Controls.Add(this.btnSave);
             this.gbxDataControls.Controls.Add(this.btnEdit);
             this.gbxDataControls.Controls.Add(this.btnNew);
-            this.gbxDataControls.Location = new System.Drawing.Point(560, 547);
+            this.gbxDataControls.Location = new System.Drawing.Point(608, 579);
             this.gbxDataControls.Name = "gbxDataControls";
             this.gbxDataControls.Size = new System.Drawing.Size(444, 60);
             this.gbxDataControls.TabIndex = 42;
@@ -170,7 +172,7 @@
             // cbxSampleIsOpen
             // 
             this.cbxSampleIsOpen.AutoSize = true;
-            this.cbxSampleIsOpen.Location = new System.Drawing.Point(240, 24);
+            this.cbxSampleIsOpen.Location = new System.Drawing.Point(237, 42);
             this.cbxSampleIsOpen.Name = "cbxSampleIsOpen";
             this.cbxSampleIsOpen.Size = new System.Drawing.Size(153, 21);
             this.cbxSampleIsOpen.TabIndex = 30;
@@ -191,17 +193,17 @@
             // lblTask
             // 
             this.lblTask.AutoSize = true;
-            this.lblTask.Font = new System.Drawing.Font("Lucida Bright", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTask.Font = new System.Drawing.Font("Lucida Bright", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTask.Location = new System.Drawing.Point(712, 24);
             this.lblTask.Name = "lblTask";
-            this.lblTask.Size = new System.Drawing.Size(85, 33);
+            this.lblTask.Size = new System.Drawing.Size(57, 22);
             this.lblTask.TabIndex = 1;
             this.lblTask.Text = "Task";
             // 
             // cbxSampleInOffice
             // 
             this.cbxSampleInOffice.AutoSize = true;
-            this.cbxSampleInOffice.Location = new System.Drawing.Point(21, 24);
+            this.cbxSampleInOffice.Location = new System.Drawing.Point(18, 42);
             this.cbxSampleInOffice.Name = "cbxSampleInOffice";
             this.cbxSampleInOffice.Size = new System.Drawing.Size(161, 21);
             this.cbxSampleInOffice.TabIndex = 21;
@@ -211,12 +213,14 @@
             // 
             // mskDLS
             // 
-            this.mskDLS.Location = new System.Drawing.Point(273, 82);
+            this.mskDLS.Location = new System.Drawing.Point(270, 100);
             this.mskDLS.Mask = ">LL 00-00-00-\\W0";
             this.mskDLS.Name = "mskDLS";
             this.mskDLS.Size = new System.Drawing.Size(120, 25);
             this.mskDLS.TabIndex = 20;
             this.mskDLS.TextMaskFormat = System.Windows.Forms.MaskFormat.IncludePromptAndLiterals;
+            this.mskDLS.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Sample_KeyPress);
+            this.mskDLS.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Sample_KeyUp);
             // 
             // txtSampleNotes
             // 
@@ -224,6 +228,8 @@
             this.txtSampleNotes.Name = "txtSampleNotes";
             this.txtSampleNotes.Size = new System.Drawing.Size(407, 25);
             this.txtSampleNotes.TabIndex = 22;
+            this.txtSampleNotes.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Sample_KeyPress);
+            this.txtSampleNotes.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Sample_KeyUp);
             // 
             // lblSampleNotes
             // 
@@ -236,8 +242,11 @@
             // 
             // gbxSample
             // 
+            this.gbxSample.Controls.Add(this.lblType);
+            this.gbxSample.Controls.Add(this.cmbSample_Type);
             this.gbxSample.Controls.Add(this.lblPrice);
             this.gbxSample.Controls.Add(this.cmbPrice);
+            this.gbxSample.Controls.Add(this.btnGenerateProjectNumbers);
             this.gbxSample.Controls.Add(this.dtpCollected);
             this.gbxSample.Controls.Add(this.lblCollected);
             this.gbxSample.Controls.Add(this.lblTest);
@@ -255,35 +264,66 @@
             this.gbxSample.Controls.Add(this.lblSite);
             this.gbxSample.Controls.Add(this.cmbSite);
             this.gbxSample.Font = new System.Drawing.Font("Lucida Bright", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.gbxSample.Location = new System.Drawing.Point(0, 327);
+            this.gbxSample.Location = new System.Drawing.Point(3, 312);
             this.gbxSample.Name = "gbxSample";
-            this.gbxSample.Size = new System.Drawing.Size(494, 265);
+            this.gbxSample.Size = new System.Drawing.Size(494, 319);
             this.gbxSample.TabIndex = 26;
             this.gbxSample.TabStop = false;
             this.gbxSample.Text = "Sample";
             // 
+            // lblType
+            // 
+            this.lblType.AutoSize = true;
+            this.lblType.Location = new System.Drawing.Point(251, 241);
+            this.lblType.Name = "lblType";
+            this.lblType.Size = new System.Drawing.Size(44, 17);
+            this.lblType.TabIndex = 60;
+            this.lblType.Text = "Type";
+            // 
+            // cmbSample_Type
+            // 
+            this.cmbSample_Type.FormattingEnabled = true;
+            this.cmbSample_Type.ItemHeight = 17;
+            this.cmbSample_Type.Location = new System.Drawing.Point(308, 236);
+            this.cmbSample_Type.Name = "cmbSample_Type";
+            this.cmbSample_Type.Size = new System.Drawing.Size(126, 25);
+            this.cmbSample_Type.TabIndex = 61;
+            this.cmbSample_Type.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Sample_KeyPress);
+            this.cmbSample_Type.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Sample_KeyUp);
+            // 
             // lblPrice
             // 
             this.lblPrice.AutoSize = true;
-            this.lblPrice.Location = new System.Drawing.Point(11, 121);
+            this.lblPrice.Location = new System.Drawing.Point(23, 244);
             this.lblPrice.Name = "lblPrice";
             this.lblPrice.Size = new System.Drawing.Size(17, 17);
-            this.lblPrice.TabIndex = 49;
+            this.lblPrice.TabIndex = 58;
             this.lblPrice.Text = "$";
             // 
             // cmbPrice
             // 
             this.cmbPrice.FormattingEnabled = true;
             this.cmbPrice.ItemHeight = 17;
-            this.cmbPrice.Location = new System.Drawing.Point(68, 116);
+            this.cmbPrice.Location = new System.Drawing.Point(80, 239);
             this.cmbPrice.Name = "cmbPrice";
             this.cmbPrice.Size = new System.Drawing.Size(126, 25);
-            this.cmbPrice.TabIndex = 50;
-            this.cmbPrice.SelectedIndexChanged += new System.EventHandler(this.Combo_SelectedItemChanged);
+            this.cmbPrice.TabIndex = 59;
+            this.cmbPrice.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Sample_KeyPress);
+            this.cmbPrice.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Sample_KeyUp);
+            // 
+            // btnGenerateProjectNumbers
+            // 
+            this.btnGenerateProjectNumbers.Location = new System.Drawing.Point(121, 279);
+            this.btnGenerateProjectNumbers.Name = "btnGenerateProjectNumbers";
+            this.btnGenerateProjectNumbers.Size = new System.Drawing.Size(240, 23);
+            this.btnGenerateProjectNumbers.TabIndex = 55;
+            this.btnGenerateProjectNumbers.Text = "Generate Project Number";
+            this.btnGenerateProjectNumbers.UseVisualStyleBackColor = true;
+            this.btnGenerateProjectNumbers.Click += new System.EventHandler(this.btnGenerateProjectNumbers_Click);
             // 
             // dtpCollected
             // 
-            this.dtpCollected.Location = new System.Drawing.Point(339, 154);
+            this.dtpCollected.Location = new System.Drawing.Point(336, 144);
             this.dtpCollected.Name = "dtpCollected";
             this.dtpCollected.Size = new System.Drawing.Size(140, 25);
             this.dtpCollected.TabIndex = 48;
@@ -291,7 +331,7 @@
             // lblCollected
             // 
             this.lblCollected.AutoSize = true;
-            this.lblCollected.Location = new System.Drawing.Point(252, 162);
+            this.lblCollected.Location = new System.Drawing.Point(249, 152);
             this.lblCollected.Name = "lblCollected";
             this.lblCollected.Size = new System.Drawing.Size(81, 17);
             this.lblCollected.TabIndex = 47;
@@ -300,7 +340,7 @@
             // lblTest
             // 
             this.lblTest.AutoSize = true;
-            this.lblTest.Location = new System.Drawing.Point(10, 165);
+            this.lblTest.Location = new System.Drawing.Point(7, 155);
             this.lblTest.Name = "lblTest";
             this.lblTest.Size = new System.Drawing.Size(66, 17);
             this.lblTest.TabIndex = 46;
@@ -309,16 +349,18 @@
             // cmbMethod
             // 
             this.cmbMethod.FormattingEnabled = true;
-            this.cmbMethod.Location = new System.Drawing.Point(80, 157);
+            this.cmbMethod.Location = new System.Drawing.Point(77, 147);
             this.cmbMethod.Name = "cmbMethod";
             this.cmbMethod.Size = new System.Drawing.Size(164, 25);
             this.cmbMethod.TabIndex = 45;
             this.cmbMethod.SelectedIndexChanged += new System.EventHandler(this.Combo_SelectedItemChanged);
+            this.cmbMethod.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Sample_KeyPress);
+            this.cmbMethod.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Sample_KeyUp);
             // 
             // lblField
             // 
             this.lblField.AutoSize = true;
-            this.lblField.Location = new System.Drawing.Point(20, 59);
+            this.lblField.Location = new System.Drawing.Point(17, 77);
             this.lblField.Name = "lblField";
             this.lblField.Size = new System.Drawing.Size(45, 17);
             this.lblField.TabIndex = 11;
@@ -327,16 +369,18 @@
             // cmbField
             // 
             this.cmbField.FormattingEnabled = true;
-            this.cmbField.Location = new System.Drawing.Point(71, 51);
+            this.cmbField.Location = new System.Drawing.Point(68, 69);
             this.cmbField.Name = "cmbField";
             this.cmbField.Size = new System.Drawing.Size(126, 25);
             this.cmbField.TabIndex = 17;
             this.cmbField.SelectedIndexChanged += new System.EventHandler(this.Combo_SelectedItemChanged);
+            this.cmbField.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Sample_KeyPress);
+            this.cmbField.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Sample_KeyUp);
             // 
             // lblDLS
             // 
             this.lblDLS.AutoSize = true;
-            this.lblDLS.Location = new System.Drawing.Point(208, 84);
+            this.lblDLS.Location = new System.Drawing.Point(205, 102);
             this.lblDLS.Name = "lblDLS";
             this.lblDLS.Size = new System.Drawing.Size(36, 17);
             this.lblDLS.TabIndex = 9;
@@ -345,7 +389,7 @@
             // lblZone
             // 
             this.lblZone.AutoSize = true;
-            this.lblZone.Location = new System.Drawing.Point(217, 57);
+            this.lblZone.Location = new System.Drawing.Point(214, 75);
             this.lblZone.Name = "lblZone";
             this.lblZone.Size = new System.Drawing.Size(46, 17);
             this.lblZone.TabIndex = 7;
@@ -355,16 +399,18 @@
             // 
             this.cmbZone.FormattingEnabled = true;
             this.cmbZone.ItemHeight = 17;
-            this.cmbZone.Location = new System.Drawing.Point(276, 51);
+            this.cmbZone.Location = new System.Drawing.Point(273, 69);
             this.cmbZone.Name = "cmbZone";
             this.cmbZone.Size = new System.Drawing.Size(120, 25);
             this.cmbZone.TabIndex = 18;
             this.cmbZone.SelectedIndexChanged += new System.EventHandler(this.Combo_SelectedItemChanged);
+            this.cmbZone.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Sample_KeyPress);
+            this.cmbZone.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Sample_KeyUp);
             // 
             // lblSite
             // 
             this.lblSite.AutoSize = true;
-            this.lblSite.Location = new System.Drawing.Point(11, 90);
+            this.lblSite.Location = new System.Drawing.Point(8, 108);
             this.lblSite.Name = "lblSite";
             this.lblSite.Size = new System.Drawing.Size(36, 17);
             this.lblSite.TabIndex = 5;
@@ -374,51 +420,41 @@
             // 
             this.cmbSite.FormattingEnabled = true;
             this.cmbSite.ItemHeight = 17;
-            this.cmbSite.Location = new System.Drawing.Point(68, 85);
+            this.cmbSite.Location = new System.Drawing.Point(65, 103);
             this.cmbSite.Name = "cmbSite";
             this.cmbSite.Size = new System.Drawing.Size(126, 25);
             this.cmbSite.TabIndex = 19;
             this.cmbSite.SelectedIndexChanged += new System.EventHandler(this.Combo_SelectedItemChanged);
+            this.cmbSite.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Sample_KeyPress);
+            this.cmbSite.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Sample_KeyUp);
             // 
             // gbxSearch
             // 
-            this.gbxSearch.Controls.Add(this.cbxNumber);
             this.gbxSearch.Controls.Add(this.cbxItem);
             this.gbxSearch.Controls.Add(this.cbxDate);
             this.gbxSearch.Controls.Add(this.cbxSample);
             this.gbxSearch.Controls.Add(this.cbxProject);
             this.gbxSearch.Controls.Add(this.btnSearch);
             this.gbxSearch.Controls.Add(this.lblEnd);
-            this.gbxSearch.Controls.Add(this.dtpEnd);
+            this.gbxSearch.Controls.Add(this.dtpEnd_Date);
             this.gbxSearch.Controls.Add(this.lblBeg);
-            this.gbxSearch.Controls.Add(this.dtpBeg);
+            this.gbxSearch.Controls.Add(this.dtpBeg_Date);
             this.gbxSearch.Font = new System.Drawing.Font("Lucida Bright", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.gbxSearch.Location = new System.Drawing.Point(3, 82);
             this.gbxSearch.Name = "gbxSearch";
-            this.gbxSearch.Size = new System.Drawing.Size(491, 239);
+            this.gbxSearch.Size = new System.Drawing.Size(491, 224);
             this.gbxSearch.TabIndex = 45;
             this.gbxSearch.TabStop = false;
             this.gbxSearch.Text = "Search";
             // 
-            // cbxNumber
-            // 
-            this.cbxNumber.AutoSize = true;
-            this.cbxNumber.Location = new System.Drawing.Point(105, 63);
-            this.cbxNumber.Name = "cbxNumber";
-            this.cbxNumber.Size = new System.Drawing.Size(225, 21);
-            this.cbxNumber.TabIndex = 54;
-            this.cbxNumber.Text = "Generate Project Numbers";
-            this.cbxNumber.UseVisualStyleBackColor = true;
-            this.cbxNumber.Click += new System.EventHandler(this.CheckBox_Click);
-            // 
             // cbxItem
             // 
             this.cbxItem.AutoSize = true;
-            this.cbxItem.Location = new System.Drawing.Point(296, 101);
+            this.cbxItem.Location = new System.Drawing.Point(270, 72);
             this.cbxItem.Name = "cbxItem";
-            this.cbxItem.Size = new System.Drawing.Size(125, 21);
+            this.cbxItem.Size = new System.Drawing.Size(140, 21);
             this.cbxItem.TabIndex = 53;
-            this.cbxItem.Text = "Sample Items";
+            this.cbxItem.Text = "By Sample Item";
             this.cbxItem.UseVisualStyleBackColor = true;
             this.cbxItem.Click += new System.EventHandler(this.CheckBox_Click);
             // 
@@ -429,18 +465,18 @@
             this.cbxDate.Name = "cbxDate";
             this.cbxDate.Size = new System.Drawing.Size(143, 21);
             this.cbxDate.TabIndex = 52;
-            this.cbxDate.Text = "Project By Date";
+            this.cbxDate.Text = "By Project Date";
             this.cbxDate.UseVisualStyleBackColor = true;
             this.cbxDate.Click += new System.EventHandler(this.CheckBox_Click);
             // 
             // cbxSample
             // 
             this.cbxSample.AutoSize = true;
-            this.cbxSample.Location = new System.Drawing.Point(33, 101);
+            this.cbxSample.Location = new System.Drawing.Point(33, 72);
             this.cbxSample.Name = "cbxSample";
-            this.cbxSample.Size = new System.Drawing.Size(131, 21);
+            this.cbxSample.Size = new System.Drawing.Size(146, 21);
             this.cbxSample.TabIndex = 51;
-            this.cbxSample.Text = "Open Samples";
+            this.cbxSample.Text = "By Open Sample";
             this.cbxSample.UseVisualStyleBackColor = true;
             this.cbxSample.Click += new System.EventHandler(this.CheckBox_Click);
             // 
@@ -449,9 +485,9 @@
             this.cbxProject.AutoSize = true;
             this.cbxProject.Location = new System.Drawing.Point(33, 23);
             this.cbxProject.Name = "cbxProject";
-            this.cbxProject.Size = new System.Drawing.Size(132, 21);
+            this.cbxProject.Size = new System.Drawing.Size(147, 21);
             this.cbxProject.TabIndex = 50;
-            this.cbxProject.Text = "Open Projects";
+            this.cbxProject.Text = "By Open Project";
             this.cbxProject.UseVisualStyleBackColor = true;
             this.cbxProject.Click += new System.EventHandler(this.CheckBox_Click);
             // 
@@ -459,7 +495,7 @@
             // 
             this.btnSearch.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.btnSearch.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.btnSearch.Location = new System.Drawing.Point(192, 191);
+            this.btnSearch.Location = new System.Drawing.Point(179, 175);
             this.btnSearch.Name = "btnSearch";
             this.btnSearch.Size = new System.Drawing.Size(112, 28);
             this.btnSearch.TabIndex = 49;
@@ -470,36 +506,36 @@
             // lblEnd
             // 
             this.lblEnd.AutoSize = true;
-            this.lblEnd.Location = new System.Drawing.Point(234, 155);
+            this.lblEnd.Location = new System.Drawing.Point(237, 119);
             this.lblEnd.Name = "lblEnd";
             this.lblEnd.Size = new System.Drawing.Size(36, 17);
             this.lblEnd.TabIndex = 48;
             this.lblEnd.Text = "End";
             // 
-            // dtpEnd
+            // dtpEnd_Date
             // 
-            this.dtpEnd.CustomFormat = "yyyy-mm-dd hh:mm:ss";
-            this.dtpEnd.Location = new System.Drawing.Point(276, 147);
-            this.dtpEnd.Name = "dtpEnd";
-            this.dtpEnd.Size = new System.Drawing.Size(137, 25);
-            this.dtpEnd.TabIndex = 47;
+            this.dtpEnd_Date.CustomFormat = "yyyy-mm-dd hh:mm:ss";
+            this.dtpEnd_Date.Location = new System.Drawing.Point(279, 111);
+            this.dtpEnd_Date.Name = "dtpEnd_Date";
+            this.dtpEnd_Date.Size = new System.Drawing.Size(137, 25);
+            this.dtpEnd_Date.TabIndex = 47;
             // 
             // lblBeg
             // 
             this.lblBeg.AutoSize = true;
-            this.lblBeg.Location = new System.Drawing.Point(33, 155);
+            this.lblBeg.Location = new System.Drawing.Point(36, 119);
             this.lblBeg.Name = "lblBeg";
             this.lblBeg.Size = new System.Drawing.Size(50, 17);
             this.lblBeg.TabIndex = 46;
             this.lblBeg.Text = "Begin";
             // 
-            // dtpBeg
+            // dtpBeg_Date
             // 
-            this.dtpBeg.CustomFormat = "yyyy-mm-dd hh:mm:ss";
-            this.dtpBeg.Location = new System.Drawing.Point(92, 149);
-            this.dtpBeg.Name = "dtpBeg";
-            this.dtpBeg.Size = new System.Drawing.Size(129, 25);
-            this.dtpBeg.TabIndex = 45;
+            this.dtpBeg_Date.CustomFormat = "yyyy-mm-dd hh:mm:ss";
+            this.dtpBeg_Date.Location = new System.Drawing.Point(95, 113);
+            this.dtpBeg_Date.Name = "dtpBeg_Date";
+            this.dtpBeg_Date.Size = new System.Drawing.Size(129, 25);
+            this.dtpBeg_Date.TabIndex = 45;
             // 
             // gbxNavControls
             // 
@@ -508,7 +544,7 @@
             this.gbxNavControls.Controls.Add(this.btnNext);
             this.gbxNavControls.Controls.Add(this.btnPrev);
             this.gbxNavControls.Controls.Add(this.btnBeg);
-            this.gbxNavControls.Location = new System.Drawing.Point(560, 477);
+            this.gbxNavControls.Location = new System.Drawing.Point(608, 509);
             this.gbxNavControls.Name = "gbxNavControls";
             this.gbxNavControls.Size = new System.Drawing.Size(444, 56);
             this.gbxNavControls.TabIndex = 53;
@@ -573,7 +609,7 @@
             this.gbxDisplay.Controls.Add(this.dgvDisplay);
             this.gbxDisplay.Location = new System.Drawing.Point(503, 82);
             this.gbxDisplay.Name = "gbxDisplay";
-            this.gbxDisplay.Size = new System.Drawing.Size(635, 368);
+            this.gbxDisplay.Size = new System.Drawing.Size(635, 421);
             this.gbxDisplay.TabIndex = 46;
             this.gbxDisplay.TabStop = false;
             this.gbxDisplay.Text = "Results";
@@ -583,9 +619,9 @@
             dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.dgvDisplay.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dgvDisplay.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvDisplay.Location = new System.Drawing.Point(6, 19);
+            this.dgvDisplay.Location = new System.Drawing.Point(18, 19);
             this.dgvDisplay.Name = "dgvDisplay";
-            this.dgvDisplay.Size = new System.Drawing.Size(611, 335);
+            this.dgvDisplay.Size = new System.Drawing.Size(611, 392);
             this.dgvDisplay.TabIndex = 0;
             this.dgvDisplay.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.dgvDisplay_CellBeginEdit);
             this.dgvDisplay.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDisplay_CellContentClick);
@@ -602,7 +638,7 @@
             this.dgvTextBoxColumnFilter1.FilterCaption = null;
             this.dgvTextBoxColumnFilter1.FilterExpression = "";
             this.dgvTextBoxColumnFilter1.HFilterAlignment = DgvFilterPopup.HFilterAlignment.Middle;
-            this.dgvTextBoxColumnFilter1.Location = new System.Drawing.Point(1021, 621);
+            this.dgvTextBoxColumnFilter1.Location = new System.Drawing.Point(1031, 538);
             this.dgvTextBoxColumnFilter1.Name = "dgvTextBoxColumnFilter1";
             this.dgvTextBoxColumnFilter1.Size = new System.Drawing.Size(8, 8);
             this.dgvTextBoxColumnFilter1.TabIndex = 47;
@@ -665,9 +701,9 @@
         private System.Windows.Forms.Label lblTest;
         private System.Windows.Forms.ComboBox cmbMethod;
         private System.Windows.Forms.Label lblEnd;
-        private System.Windows.Forms.DateTimePicker dtpEnd;
+        private System.Windows.Forms.DateTimePicker dtpEnd_Date;
         private System.Windows.Forms.Label lblBeg;
-        private System.Windows.Forms.DateTimePicker dtpBeg;
+        private System.Windows.Forms.DateTimePicker dtpBeg_Date;
         private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.GroupBox gbxDisplay;
         private System.Windows.Forms.Label lblTask;
@@ -684,9 +720,11 @@
         private System.Windows.Forms.Button btnBeg;
         private System.Windows.Forms.DateTimePicker dtpCollected;
         private System.Windows.Forms.Label lblCollected;
+        private System.Windows.Forms.CheckBox cbxItem;
+        private System.Windows.Forms.Button btnGenerateProjectNumbers;
+        private System.Windows.Forms.Label lblType;
+        private System.Windows.Forms.ComboBox cmbSample_Type;
         private System.Windows.Forms.Label lblPrice;
         private System.Windows.Forms.ComboBox cmbPrice;
-        private System.Windows.Forms.CheckBox cbxItem;
-        private System.Windows.Forms.CheckBox cbxNumber;
     }
 }

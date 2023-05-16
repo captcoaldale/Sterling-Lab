@@ -61,9 +61,9 @@
             // 
             this.btnSample.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.btnSample.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSample.Location = new System.Drawing.Point(34, 338);
+            this.btnSample.Location = new System.Drawing.Point(28, 322);
             this.btnSample.Name = "btnSample";
-            this.btnSample.Size = new System.Drawing.Size(208, 56);
+            this.btnSample.Size = new System.Drawing.Size(208, 45);
             this.btnSample.TabIndex = 6;
             this.btnSample.Text = "Sample";
             this.btnSample.UseVisualStyleBackColor = false;
@@ -74,9 +74,9 @@
             this.btnMigrate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
             this.btnMigrate.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnMigrate.ForeColor = System.Drawing.Color.White;
-            this.btnMigrate.Location = new System.Drawing.Point(28, 551);
+            this.btnMigrate.Location = new System.Drawing.Point(28, 518);
             this.btnMigrate.Name = "btnMigrate";
-            this.btnMigrate.Size = new System.Drawing.Size(208, 56);
+            this.btnMigrate.Size = new System.Drawing.Size(208, 45);
             this.btnMigrate.TabIndex = 5;
             this.btnMigrate.Text = "Migrate";
             this.btnMigrate.UseVisualStyleBackColor = false;
@@ -87,9 +87,9 @@
             this.btnICP.BackColor = System.Drawing.Color.Blue;
             this.btnICP.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnICP.ForeColor = System.Drawing.Color.White;
-            this.btnICP.Location = new System.Drawing.Point(28, 486);
+            this.btnICP.Location = new System.Drawing.Point(28, 451);
             this.btnICP.Name = "btnICP";
-            this.btnICP.Size = new System.Drawing.Size(208, 56);
+            this.btnICP.Size = new System.Drawing.Size(208, 45);
             this.btnICP.TabIndex = 4;
             this.btnICP.Text = "ICP";
             this.btnICP.UseVisualStyleBackColor = false;
@@ -100,9 +100,9 @@
             this.btnBatch.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
             this.btnBatch.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnBatch.ForeColor = System.Drawing.Color.White;
-            this.btnBatch.Location = new System.Drawing.Point(28, 421);
+            this.btnBatch.Location = new System.Drawing.Point(28, 386);
             this.btnBatch.Name = "btnBatch";
-            this.btnBatch.Size = new System.Drawing.Size(208, 56);
+            this.btnBatch.Size = new System.Drawing.Size(208, 45);
             this.btnBatch.TabIndex = 3;
             this.btnBatch.Text = "Work Order";
             this.btnBatch.UseVisualStyleBackColor = false;
@@ -112,9 +112,9 @@
             // 
             this.btnProject.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.btnProject.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnProject.Location = new System.Drawing.Point(28, 261);
+            this.btnProject.Location = new System.Drawing.Point(28, 248);
             this.btnProject.Name = "btnProject";
-            this.btnProject.Size = new System.Drawing.Size(214, 56);
+            this.btnProject.Size = new System.Drawing.Size(208, 45);
             this.btnProject.TabIndex = 2;
             this.btnProject.Text = "Project";
             this.btnProject.UseVisualStyleBackColor = false;
@@ -124,9 +124,9 @@
             // 
             this.btnClient.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(255)))));
             this.btnClient.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnClient.Location = new System.Drawing.Point(28, 196);
+            this.btnClient.Location = new System.Drawing.Point(28, 178);
             this.btnClient.Name = "btnClient";
-            this.btnClient.Size = new System.Drawing.Size(214, 56);
+            this.btnClient.Size = new System.Drawing.Size(208, 45);
             this.btnClient.TabIndex = 1;
             this.btnClient.Text = "Client";
             this.btnClient.UseVisualStyleBackColor = false;
@@ -135,7 +135,7 @@
             // pictureBox1
             // 
             this.pictureBox1.Image = global::Sterling_Lab.Properties.Resources.Sterling2;
-            this.pictureBox1.Location = new System.Drawing.Point(75, 33);
+            this.pictureBox1.Location = new System.Drawing.Point(74, 15);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(134, 157);
             this.pictureBox1.TabIndex = 1;

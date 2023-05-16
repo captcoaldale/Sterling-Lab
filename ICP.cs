@@ -408,7 +408,7 @@ namespace Sterling_Lab
 
         {
             string tablename = dp.GetTableNameFromQuery(query);
-            dp.PopulateDataGridView(query, dgvDisplay, tablename);
+            dp.PopulateDataGridView(query, dgvDisplay, bs, tablename);
             //PopulateChart(query);
             UpdateState(State.Edit);
         }

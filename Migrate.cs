@@ -278,10 +278,10 @@ namespace Sterling_Lab
             //ResetControls("Saving", "Save Progress");
             // tbl_company: company_pk, company_name, active, is_supplier, is_client, notes (6 cols)
             string tablename = "company";
-            string select = "SELECT COUNT(company_pk) FROM tbl_company WHERE company_name LIKE '%" + this.client.Substring(0,12) + "%';"; // like includes Silverleaf + (Co, Inc, Resources, Ltd ...)
+            string select = "SELECT COUNT(company_pk) FROM tbl_company WHERE company_name LIKE " + '"' + '%' + this.client.Substring(0, 12) + "%" + '"' + ";"; //  NB use double quotes!  LIKE selectes Silverleaf + (Co, Inc, Resources, Ltd ...)
             sb.Clear();
-            sb.Append("SET foreign_key_checks=0;INSERT INTO tbl_company VALUES ");
-            sb.Append("(" + 0 + ",'" + this.client + "', true, false, true, false);SET foreign_key_checks=1;");
+            sb.Append("INSERT INTO tbl_company VALUES ");
+            sb.Append("(" + 0 + ",'" + this.client + "', true, false, true, false);");
             string insert = sb.ToString();
             this.client_id = dp.ProcessData(select, insert, tablename);
 
@@ -289,45 +289,43 @@ namespace Sterling_Lab
             this.price_id = (this.price_id > 0) ? this.price_id : 1; // TODO: complete price table
 
             // tbl_office = office_pk, office_desc  (2 cols) ...
-            select = "SELECT COUNT(office_pk) from tbl_office WHERE office_desc LIKE '%" + this.office + "%'";
+            select = "SELECT COUNT(office_pk) from tbl_office WHERE office_desc LIKE " + '"' + '%' + this.office + "%" + '"' + ";";
             tablename = "office";
             insert = "INSERT INTO tbl_office VALUES (0,'" + this.office + "')";
             this.office_id = dp.ProcessData(select, insert, tablename);
 
             // tbl_field: field_pk, field_desc (2cols)
-            select = "SELECT COUNT(field_pk) from tbl_field WHERE field_desc = '" + this.area + "'";
+            select = "SELECT COUNT(field_pk) from tbl_field WHERE field_desc = '" + this.area + "';";
             tablename = "field";
-            insert = "INSERT INTO tbl_field VALUES (0,'" + this.area + "')";
+            insert = "INSERT INTO tbl_field VALUES (0,'" + this.area + "');";
             this.field_id = dp.ProcessData(select, insert, tablename);
 
             dp.UpdateProgressBar(pbrSaving, Color.Green, 20);
 
             // tbl_zone: zone_pk, zone_desc 2 fields
-            select = "SELECT COUNT(zone_pk) from tbl_zone WHERE zone_desc = '" + this.zone + "'";
+            select = "SELECT COUNT(zone_pk) from tbl_zone WHERE zone_desc = '" + this.zone + "';";
             tablename = "zone";
-            insert = "INSERT INTO tbl_zone VALUES(0,'" + this.zone + "')";
+            insert = "INSERT INTO tbl_zone VALUES(0,'" + this.zone + "');";
             this.zone_id = dp.ProcessData(select, insert, tablename);
 
             // check tbl_site
-            select = "SELECT COUNT(site_pk) from tbl_site WHERE site_desc LIKE '%" + this.site + "%'";
+            select = "SELECT COUNT(site_pk) from tbl_site WHERE site_desc = '" + this.site + "';";
             tablename = "site";
-            insert = "insert into tbl_site values (0, '" + this.site + "')";
+            insert = "INSERT INTO tbl_site VALUES (0, '" + this.site + "')";
             this.site_id = dp.ProcessData(select, insert, tablename);
 
             // POPULATE tbl_location ... columns: location_pk, client_fk, field_fk, zone_fk, site_fk, land_desc, location_notes
             // check for dup locations ...
             sb.Clear();
-            select = "SELECT COUNT(location_pk) from tbl_location WHERE client_fk = " + this.client_id + " && '" + this.dls + "'";
+            select = "SELECT COUNT(location_pk) from tbl_location WHERE client_fk = " + this.client_id + ";";
             tablename = "location";
-            sb.Append("SET foreign_key_checks=0;INSERT INTO tbl_location VALUES ");
-            sb.Append("(" + 0 + "," + this.client_id + ", " + this.field_id + ", " + this.zone_id + "," + this.site_id + ",'" + this.dls + "', null);SET foreign_key_checks=1;");
+            sb.Append("INSERT INTO tbl_location VALUES ");
+            sb.Append("(" + 0 + "," + this.client_id + ", " + this.field_id + ", " + this.zone_id + "," + this.site_id + ",'" + this.dls + "', null);");
             insert = sb.ToString();
             this.location_id = dp.ProcessData(select, insert, tablename);
 
             // TODO: fk inserts fail w/out set foreign_key_checks = 0; (why can't we do this w/ the keys in place??
-
-            //  POPULATE tbl_project: project_pk, file_name, project_number, customer_fk, agent_fk, project_type_fk, _objective_fk, date_initiated, 
-            // is_reported,  priority_requested_fk, bill_cust, bill_cust_notes, project_notes (13 fields)
+           //  POPULATE tbl_project
             int priority_fk = 1; // "Standard"
             if (this.acct_manager.Contains(" "))
             {
@@ -346,28 +344,30 @@ namespace Sterling_Lab
             int max_cols = 0;
             this.date_initiated = dp.GetDateString(this.date_sampled, 1); // SQL format (use date_sampled for missing date initiated)
             this.date_sampled = this.date_initiated;
-            this.date_received = dp.GetDateString(this.date_received, 1); // SQL
+            this.date_reported = dp.GetDateString(this.date_reported, 1); // date_report_expected in DB
 
             // Generate a standard project number (clientID, siteID, methodID, dateinitiated)
             ProjectNumberGenerator pn = new ProjectNumberGenerator();
             project_number = pn.Generate(client_id, location_id, method_id, date_initiated);
 
+
+            //  POPULATE tbl_project: project_pk, file_name, project_number, client_fk, agent_fk, project_type_fk, _objective_fk, priority_requested_fk, 
+            //  date_initiated, date_report_expected, is_reported,  bill_cust, bill_cust_notes, project_notes (14 fields)
             select = "";
-            sb.Append("SET foreign_key_checks=0;INSERT INTO tbl_project VALUES ");
-            sb.Append("(" + 0 + ",'" + this.file_name + "','" + this.project_number + "', " + this.client_id + ", " + this.acct_manager_id + "," + this.project_type_id + "," + this._objective_id + ",'"
-                + this.date_initiated + "'," + true + "," + priority_fk + "," + true + ", null, null);SET foreign_key_checks=1;");
+            sb.Append("INSERT INTO tbl_project VALUES (" + 0 + ",'" + this.file_name + "','" + this.project_number + "', " + this.client_id + ", " + this.acct_manager_id + "," 
+                + this.project_type_id + "," + this._objective_id + "," + priority_fk + ",'"
+                + this.date_initiated + "','" + date_reported + "'," + true + "," + priority_fk + ", null, null);");
             insert = sb.ToString();
             int project_fk = dp.ProcessData(select, insert, tablename);
             dp.UpdateProgressBar(pbrSaving, Color.Green, 20);
 
-            // tbl_sample: sample_pk, batch_fk, project_fk, method_fk, location_fk, sample_type_fk, sample_name, date_collected, sample_notes, is_in_office, is_open (11 fields)...
+            // tbl_sample: sample_pk, batch_fk, project_fk, method_fk, location_fk, sample_type_fk, sample_number, date_collected, sample_notes, is_in_office, is_open (11 fields)...
             sb.Clear();
             tablename = "sample";
             select = ""; // 0?
             string sample_name = sng.Generate();
-            sb.Append("SET foreign_key_checks=0;INSERT INTO tbl_sample VALUES ");
-            sb.Append("(" + 0 + ",null," + project_fk + "," + method_id + "," + location_id + "," + sample_type_id +
-                ",'" + sample_name + "','" + date_sampled + "','Full Water Analysis',true,true);SET foreign_key_checks=1;");
+            sb.Append("INSERT INTO tbl_sample VALUES (" + 0 + ",null," + project_fk + "," + method_id + "," + location_id + "," + sample_type_id +
+                ",'" + sample_name + "','" + date_sampled + "','Full Water Analysis',true,true);");
             insert = sb.ToString();
             int sample_fk = dp.ProcessData(select, insert, tablename);
 
@@ -379,7 +379,7 @@ namespace Sterling_Lab
             max_cols = 14; // 15 actual cols but zero-based
             int col_count = 0; //  column count
             sb.Clear();
-            sb.Append("SET foreign_key_checks=0;INSERT INTO tbl_sample_items VALUES (0," + sample_fk + ",");
+            sb.Append("INSERT INTO tbl_sample_items VALUES (0," + sample_fk + ",");
             foreach (DataRow row in tblParameter.tbl.Rows)
             {
                 foreach (DataColumn col in tblParameter.tbl.Columns)
@@ -403,7 +403,7 @@ namespace Sterling_Lab
                     col_count++;
                 }
             }
-            sb.Append(");SET foreign_key_checks = 1;");
+            sb.Append(");");
             insert = sb.ToString();
             int sample_item_pk = dp.ProcessData(select, insert, tablename);
 
@@ -435,9 +435,9 @@ namespace Sterling_Lab
             tablename = "test";
             int method_fk = 1; // FWA
             select = ""; //
-            sb.Append("SET foreign_key_checks = 0; INSERT INTO tbl_test VALUES ");
+            sb.Append("INSERT INTO tbl_test VALUES ");
             sb.Append("(0," + sample_fk + "," + method_fk + "," + tech_id + "," + alt_id + "," + priority_fk + ",'"
-                + this.date_received + "','" + this.date_reported + "', 'FWA', 'N/A');SET foreign_key_checks = 1");
+                + this.date_received + "','" + this.date_reported + "', 'FWA', 'N/A');");
             insert = sb.ToString();
             int test_fk = dp.ProcessData(select, insert, tablename);
 
@@ -455,9 +455,9 @@ namespace Sterling_Lab
                 sb.Clear();
                 string element = row[0].ToString();
                 element_fk = dp.GetID("SELECT element_pk FROM tbl_element WHERE acronym = '" + element + "';");
-                sb = new StringBuilder("SET foreign_key_checks = 0; INSERT INTO tbl_test_item VALUES ");
+                sb = new StringBuilder("INSERT INTO tbl_test_item VALUES ");
                 sb.Append("(0," + test_fk + "," + method_item_fk + "," + method_type_fk + ",'" + date_received + "'," + element_fk + ","
-                     + row[1] + "," + unit_1_fk + "," + row[2] + "," + unit_2_fk + ",null,null); SET foreign_key_checks = 1;"); // NULLS for test_item's three values
+                     + row[1] + "," + unit_1_fk + "," + row[2] + "," + unit_2_fk + ",null,null);"); // NULLS for test_item's three values
             }
             insert = sb.ToString();
             test_item_pk = dp.ProcessData("", insert, tablename);
@@ -469,9 +469,9 @@ namespace Sterling_Lab
             {
                 element_fk = dp.GetID("select element_pk from tbl_element WHERE acronym= '" + row[0] + "'");
                 sb.Clear();
-                sb = new StringBuilder("SET foreign_key_checks=0;INSERT INTO tbl_test_item VALUES (0,");
+                sb = new StringBuilder("INSERT INTO tbl_test_item VALUES (0,");
                 sb.Append(test_fk + ", " + method_item_fk + ", " + method_type_fk + ",'" + date_received + "'," + element_fk + ", "
-                    + row[1] + "," + unit_1_fk + ", null, null,null,null); set foreign_key_checks=1;");
+                    + row[1] + "," + unit_1_fk + ", null, null,null,null);");
             }
             insert = sb.ToString();
             test_item_pk = dp.ProcessData(select, insert, tablename);
@@ -485,7 +485,7 @@ namespace Sterling_Lab
             foreach (DataRow row in tblSaturation.tbl.Rows)
             {
                 sb.Clear();
-                sb.Append("SET foreign_key_checks=0; INSERT INTO tbl_saturation VALUES (0," + test_fk + ",'" + date_received + "',");
+                sb.Append("INSERT INTO tbl_saturation VALUES (0," + test_fk + ",'" + date_received + "',");
                 int colCount = 0; //  added above 
                 foreach (DataColumn col in tblSaturation.tbl.Columns)
                 {
@@ -499,7 +499,7 @@ namespace Sterling_Lab
                         sb.Append(row[col.ColumnName]);
                     colCount++;
                 }
-                sb.Append(");SET foreign_key_checks = 1;");
+                sb.Append(");");
                 insert = sb.ToString();
                 saturation_pk = dp.ProcessData(select, insert, tablename);
             }
@@ -515,7 +515,7 @@ namespace Sterling_Lab
             foreach (DataRow row in tblCorrosion.tbl.Rows)
             {
                 sb.Clear();
-                sb.Append("SET foreign_key_checks=0;INSERT INTO tbl_corrosion VALUES (0," + test_fk + ",'" + date_received + "',");
+                sb.Append("INSERT INTO tbl_corrosion VALUES (0," + test_fk + ",'" + date_received + "',");
                 int colCount = 0; //  added above 
                 foreach (DataColumn col in tblCorrosion.tbl.Columns)
                 {
@@ -529,7 +529,7 @@ namespace Sterling_Lab
                         sb.Append(row[col.ColumnName]);
                     colCount++;
                 }
-                sb.Append(");SET foreign_key_checks = 1;");
+                sb.Append(");");
                 insert = sb.ToString();
                 corrosion_pk = dp.ProcessData(select, insert, tablename);
             }

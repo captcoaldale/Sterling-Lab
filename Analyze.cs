@@ -6,8 +6,9 @@ using System.Windows.Forms;
 
 namespace Sterling_Lab
 {
-    public partial class WorkOrder : UserControl
+    public partial class Analyze : UserControl
     {
+        private int current_row;
         private int clientID;
         private int projectID;
         private string project_number;
@@ -34,9 +35,7 @@ namespace Sterling_Lab
         private Task current_task { get; set; }
         private Task previous_task { get; set; }
 
-        private int current_row = 0;
-
-        public WorkOrder()
+        public Analyze()
         {
             InitializeComponent();
             dp = new DataProcessor("DB");
@@ -75,12 +74,12 @@ namespace Sterling_Lab
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            UpdateBatch(State.Cancel);
+            UpdateAnalysis(State.Cancel);
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            UpdateBatch(State.Delete);
+            UpdateAnalysis(State.Delete);
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
@@ -91,27 +90,27 @@ namespace Sterling_Lab
         private void btnNew_Click(object sender, EventArgs e)
         {
             current_task = Task.Sample;
-            UpdateBatch(State.New);
+            UpdateAnalysis(State.New);
         }
         private void btnSave_Click(object sender, EventArgs e)
         {
             if (current_state != State.Load)
             {
                 current_task = Task.Sample;
-                UpdateBatch(State.Save);
+                UpdateAnalysis(State.Save);
             }
         }
 
         // Search
         private void btnSearch_Click(object sender, EventArgs e)
         {
-            UpdateBatch(State.Load);
+            UpdateAnalysis(State.Load);
         }
 
         private void cmbSample_SelectedIndexChanged(object sender, EventArgs e)
         {
             current_task = Task.Item;
-            UpdateBatch(State.Load);
+            UpdateAnalysis(State.Load);
         }
 
         private void ClearControls()
@@ -140,7 +139,7 @@ namespace Sterling_Lab
 
         private Task ConvertStringToTask(string str)
         {
-            switch(form_task)
+            switch (form_task)
             {
                 case "Batch":
                     current_task = Task.Batch; break;
@@ -156,7 +155,7 @@ namespace Sterling_Lab
 
         private string ConvertTaskToString(Task task)
         {
-            switch(task)
+            switch (task)
             {
                 case Task.Batch:
                     form_task = "Batch"; break;
@@ -202,7 +201,7 @@ namespace Sterling_Lab
                     case State.Edit:
                         val = dgvDisplay.Rows[e.RowIndex].Cells["project_pk"].FormattedValue.ToString();
                         this.projectID = Convert.ToInt32(val);
-                        GetBatchSelectQuery(Task.Sample);
+                        GetAnalysisSelectQuery(Task.Sample);
                         //string date = dp.GetDataItem("SELECT date_received FROM tbl_sample WHERE sample_pk = " + projectID).ToString();
                         //lblDisplay.Text = "Parameters For Sample " +  " :: " + date;
                         break;
@@ -314,52 +313,7 @@ namespace Sterling_Lab
                 dgvDisplay.CurrentCell = dgvDisplay[e.ColumnIndex, row_index]; // auto advance the row
         }
 
-        private string GetBatchSelectQuery()
-        {
-            string query = string.Empty;
-
-            switch (current_task)
-            {
-                case Task.Batch:
-                    query = "SELECT * FROM tbl_sample  WHERE is_open = true AND date_collected BETWEEN '" + dtpBeg.Value + "' AND '" + DateTime.Now + "';";
-                    break;
-                case Task.Element:
-                    query = "SELECT sample_name FROM tbl_sample WHERE is_open = true AND date_collected BETWEEN '" + dtpBeg.Value + "' AND '" + DateTime.Now + "';";
-                    break;
-                case Task.Item:
-                    query = "SELECT * FROM tbl_sample_items WHERE sample_fk = " + cmbSample.SelectedValue + ";";
-                    break;
-                case Task.Sample:
-                    query = "SELECT sample_name FROM tbl_sample WHERE is_open = true AND date_collected BETWEEN '" + dtpBeg.Value + "' AND '" + DateTime.Now + "';";
-                    break;
-
-                default:
-                    break;
-            }
-            return query;
-        }
-
-        //private void GetBatchItems()
-        //{
-        //    string query = "";
-        //    DataTable dt = new DataTable();
-        //    try
-        //    {
-        //        query = "SELECT * FROM tbl_sample_items WHERE sample_fk = '" + cmbSample.SelectedValue + "';";
-        //    }
-        //    catch(Exception x)
-        //    {
-        //        MessageBox.Show(x.Message, "Sample Item Read", MessageBoxButtons.OK,MessageBoxIcon.Error);
-        //    }
-        //    if (dt.Rows.Count > 0)
-        //        dgvDisplay.DataSource = dt;
-        //    else
-        //        MessageBox.Show("No Sample Items. Create New.", "S", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        //    current_state = State.Load;
-        //    PopulateForm(query);
-        //}
-
-        private string GetBatchSelectQuery(Task current_task)
+        private string GetAnalysisSelectQuery(Task current_task)
         {
             string query = string.Empty;
             switch (current_task)
@@ -368,7 +322,7 @@ namespace Sterling_Lab
                     query = "SELECT * FROM tbl_sample WHERE is_open = true;";
                     break;
                 case Task.Item:
-                    query = "SELECT * FROM tbl_sample_items WHERE sample_fk = " + cmbSample.SelectedValue + ";";
+                    query = "SELECT * FROM tbl_sample_items WHERE sample_fk = " + cmbClient.SelectedValue + ";";
                     break;
                 default:
                     break;
@@ -380,15 +334,21 @@ namespace Sterling_Lab
         {
             try
             {
-                gbxSearch.Text = "Search Sample Items";
-                dtpBeg.Value = DateTime.Now.SubtractBusinessDays(3);
+                gbxSearch.Text = "Search Items";
+                dtpBeg_Date.Value = DateTime.Now.SubtractBusinessDays(3);
+                dtpEnd_Date.Value = DateTime.Now;
                 string query = "";
                 current_task = Task.Sample;
                 previous_state = State.Navigate;
                 if (current_state == State.Load)
                 {
-                    query = "SELECT sample_number AS display, sample_pk AS value FROM tbl_sample WHERE is_open = 1;"; // ADD + dtpBeg.Value +
-                    dp.PopulateCombo(query, cmbSample, "display", "value");
+                    query = "SELECT company_name AS display, company_pk AS value FROM tbl_company WHERE is_client = true;"; // ADD + dtpBeg.Value +
+                    dp.PopulateCombo(query, cmbClient, "display", "value");
+                    cmbClient.SelectedIndex = 0;
+                    query = "SELECT field_desc AS display, field_pk AS value FROM tbl_field " +
+                        "INNER JOIN tbl_location ON field_fk = field_pk" +
+                        " WHERE client_fk = " + Convert.ToInt32(dp.GetSelectedValue(cmbClient).ToString()); // ADD + dtpBeg.Value +
+                    dp.PopulateCombo(query, cmbClient, "display", "value");
                 }
             }
             catch (Exception x)
@@ -399,21 +359,19 @@ namespace Sterling_Lab
             {
 
             }
-            UpdateBatch(current_state);
+            UpdateAnalysis(current_state);
         }
 
         private void PopulateForm(string query = "")
         {
-           
-            string sample_number = "";
-  
+            string company_name = "";
             form_task = ConvertTaskToString(current_task);
             try
             {
                 IsPopulating = true;
                 if (query.Length == 0)
                 {
-                    query = GetBatchSelectQuery(current_task);
+                    query = GetAnalysisSelectQuery(current_task);
                 }
                 if (current_state == State.Load)
                 {
@@ -426,10 +384,10 @@ namespace Sterling_Lab
                 DataGridViewRow row = dgvDisplay.Rows[current_row];
                 dgvDisplay.ClearSelection();
                 row.Selected = true;
-                this.sampleID = Convert.ToInt32(cmbSample.SelectedValue);
+                this.sampleID = Convert.ToInt32(cmbClient.SelectedValue);
                 sample_number = dp.GetDataItem("SELECT sample_number FROM tbl_sample WHERE sample_pk = " + sampleID + ";").ToString();
-                // company_name = dp.GetStringFromDB("SELECT company_name FROM tbl_company WHERE company_pk = " + clientID);
-                //gbxDisplay.Text = " Report for Client :: " + company_name;
+                company_name = dp.GetStringFromDB("SELECT company_name FROM tbl_company WHERE company_pk = " + clientID);
+                gbxDisplay.Text = " Report for Client :: " + company_name;
                 //project_number = row.Cells["project_number"].Value.ToString();
                 //btnGenerateProjectNumbers.Visible = (project_number.Length == 0);
 
@@ -455,7 +413,7 @@ namespace Sterling_Lab
         }
 
 
-        private void Sample_KeyPress(object sender, KeyPressEventArgs e)
+        private void Analysis_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (Char.IsLetterOrDigit(e.KeyChar))
             {
@@ -469,23 +427,23 @@ namespace Sterling_Lab
             {
                 current_task = Task.Sample;
                 ConvertTaskToString(current_task);
-                UpdateBatch(State.Save);
+                UpdateAnalysis(State.Save);
             }
         }
 
-        private void Sample_KeyUp(object sender, KeyEventArgs e)
+        private void Analysis_KeyUp(object sender, KeyEventArgs e)
         {
             Control ctl = sender as Control;
             switch (e.KeyCode)
             {
                 case Keys.Enter:
                     if (ctl.Name == "txtSample_Number")
-                        UpdateBatch(State.Navigate);
+                        UpdateAnalysis(State.Navigate);
                     else if (IsDirty)
                     {
                         current_task = Task.Sample;
                         ConvertTaskToString(current_task);
-                        UpdateBatch(State.Save);
+                        UpdateAnalysis(State.Save);
                     }
                     break;
                 case Keys.F2:
@@ -494,8 +452,7 @@ namespace Sterling_Lab
             }
         }
 
-
-        private bool UpdateBatch(State status, string query = "")
+        private bool UpdateAnalysis(State status, string query = "")
         {
             try
             {
@@ -558,7 +515,7 @@ namespace Sterling_Lab
                                     locationID = dp.GetID("SELECT location_pk FROM tbl_location WHERE client_fk = " + clientID + " AND site_fk = " + ";");
                                     if (locationID == 0)
                                     { // add a new location
-                                        query = "INSERT INTO tbl_location VALUES (0," ;
+                                        query = "INSERT INTO tbl_location VALUES (0,";
                                         locationID = dp.ProcessData("", query, "location");
                                     }
                                 }
@@ -568,7 +525,7 @@ namespace Sterling_Lab
                                 }
                                 if (methodID == 0)
                                 {
-                                    sampleID = dp.GetSelectedValue(cmbSample);
+                                    sampleID = dp.GetSelectedValue(cmbClient);
                                 }
                                 else if (methodID == 0)
                                 {
@@ -634,7 +591,7 @@ namespace Sterling_Lab
                     btnCancel.Enabled = false;
                     btnDelete.Enabled = false;
                     btnSearch.Enabled = true;
-                    
+
                     gbxSearch.Enabled = true;
                     break;
                 case State.Cancel:
@@ -652,7 +609,7 @@ namespace Sterling_Lab
                     btnDelete.Enabled = true;
                     btnNew.Enabled = false;
                     btnEdit.Enabled = false;
-                    
+
                     gbxSearch.Enabled = false;
                     break;
                 case State.New:
@@ -663,7 +620,7 @@ namespace Sterling_Lab
                     btnSave.Enabled = true;
                     btnCancel.Enabled = true;
                     this.sample_saved = false; // insert sample and populate sample fields
-                    
+
                     gbxSearch.Enabled = false;
                     break;
                 case State.Save:
@@ -677,5 +634,6 @@ namespace Sterling_Lab
             lblDisplay.Text = ConvertTaskToString(current_task) + " :: " + form_state;
             DataControlsStatusChanged();
         }
+
     }
 }

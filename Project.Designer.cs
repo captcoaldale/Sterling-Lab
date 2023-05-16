@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.gbxProject = new System.Windows.Forms.GroupBox();
             this.cbxIs_Reported = new System.Windows.Forms.CheckBox();
             this.gbxBill_Client = new System.Windows.Forms.GroupBox();
@@ -45,14 +45,14 @@
             this.lblDateInitiated = new System.Windows.Forms.Label();
             this.dtpDate_Initiated = new System.Windows.Forms.DateTimePicker();
             this.lblProjectNotes = new System.Windows.Forms.Label();
-            this.txtProject = new System.Windows.Forms.TextBox();
+            this.txtProject_Notes = new System.Windows.Forms.TextBox();
             this.cmbProject_Type = new System.Windows.Forms.ComboBox();
             this.pnlProject = new System.Windows.Forms.Panel();
             this.lblDisplay = new System.Windows.Forms.Label();
             this.gbxSearch = new System.Windows.Forms.GroupBox();
-            this.txtNumber = new System.Windows.Forms.TextBox();
+            this.txtProject_Number = new System.Windows.Forms.TextBox();
             this.btnSearch = new System.Windows.Forms.Button();
-            this.cbxNumber = new System.Windows.Forms.CheckBox();
+            this.cbxProject_Number = new System.Windows.Forms.CheckBox();
             this.cmbAgent = new System.Windows.Forms.ComboBox();
             this.cbxOpen = new System.Windows.Forms.CheckBox();
             this.cbxDate = new System.Windows.Forms.CheckBox();
@@ -102,7 +102,7 @@
             this.gbxProject.Controls.Add(this.lblDateInitiated);
             this.gbxProject.Controls.Add(this.dtpDate_Initiated);
             this.gbxProject.Controls.Add(this.lblProjectNotes);
-            this.gbxProject.Controls.Add(this.txtProject);
+            this.gbxProject.Controls.Add(this.txtProject_Notes);
             this.gbxProject.Controls.Add(this.cmbProject_Type);
             this.gbxProject.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.gbxProject.Location = new System.Drawing.Point(9, 316);
@@ -257,14 +257,14 @@
             this.lblProjectNotes.TabIndex = 11;
             this.lblProjectNotes.Text = "Notes";
             // 
-            // txtProject
+            // txtProject_Notes
             // 
-            this.txtProject.Location = new System.Drawing.Point(214, 182);
-            this.txtProject.Name = "txtProject";
-            this.txtProject.Size = new System.Drawing.Size(344, 26);
-            this.txtProject.TabIndex = 12;
-            this.txtProject.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Project_KeyPress);
-            this.txtProject.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Project_KeyUp);
+            this.txtProject_Notes.Location = new System.Drawing.Point(214, 182);
+            this.txtProject_Notes.Name = "txtProject_Notes";
+            this.txtProject_Notes.Size = new System.Drawing.Size(344, 26);
+            this.txtProject_Notes.TabIndex = 12;
+            this.txtProject_Notes.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Project_KeyPress);
+            this.txtProject_Notes.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Project_KeyUp);
             // 
             // cmbProject_Type
             // 
@@ -299,9 +299,9 @@
             // 
             // gbxSearch
             // 
-            this.gbxSearch.Controls.Add(this.txtNumber);
+            this.gbxSearch.Controls.Add(this.txtProject_Number);
             this.gbxSearch.Controls.Add(this.btnSearch);
-            this.gbxSearch.Controls.Add(this.cbxNumber);
+            this.gbxSearch.Controls.Add(this.cbxProject_Number);
             this.gbxSearch.Controls.Add(this.cmbAgent);
             this.gbxSearch.Controls.Add(this.cbxOpen);
             this.gbxSearch.Controls.Add(this.cbxDate);
@@ -321,19 +321,21 @@
             this.gbxSearch.TabStop = false;
             this.gbxSearch.Text = "Search";
             // 
-            // txtNumber
+            // txtProject_Number
             // 
-            this.txtNumber.Location = new System.Drawing.Point(66, 161);
-            this.txtNumber.Name = "txtNumber";
-            this.txtNumber.Size = new System.Drawing.Size(205, 26);
-            this.txtNumber.TabIndex = 43;
-            this.txtNumber.Enter += new System.EventHandler(this.txtProject_Number_Enter);
-            this.txtNumber.Leave += new System.EventHandler(this.txtProject_Number_Leave);
+            this.txtProject_Number.Location = new System.Drawing.Point(10, 160);
+            this.txtProject_Number.Name = "txtProject_Number";
+            this.txtProject_Number.Size = new System.Drawing.Size(376, 26);
+            this.txtProject_Number.TabIndex = 43;
+            this.txtProject_Number.Enter += new System.EventHandler(this.txtProject_Number_Enter);
+            this.txtProject_Number.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Project_KeyPress);
+            this.txtProject_Number.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Project_KeyUp);
+            this.txtProject_Number.Leave += new System.EventHandler(this.txtProject_Number_Leave);
             // 
             // btnSearch
             // 
             this.btnSearch.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnSearch.Location = new System.Drawing.Point(395, 160);
+            this.btnSearch.Location = new System.Drawing.Point(414, 160);
             this.btnSearch.Name = "btnSearch";
             this.btnSearch.Size = new System.Drawing.Size(177, 27);
             this.btnSearch.TabIndex = 42;
@@ -341,16 +343,16 @@
             this.btnSearch.UseVisualStyleBackColor = false;
             this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
             // 
-            // cbxNumber
+            // cbxProject_Number
             // 
-            this.cbxNumber.AutoSize = true;
-            this.cbxNumber.Location = new System.Drawing.Point(466, 29);
-            this.cbxNumber.Name = "cbxNumber";
-            this.cbxNumber.Size = new System.Drawing.Size(111, 24);
-            this.cbxNumber.TabIndex = 41;
-            this.cbxNumber.Text = "By Number";
-            this.cbxNumber.UseVisualStyleBackColor = true;
-            this.cbxNumber.Click += new System.EventHandler(this.CheckBox_Click);
+            this.cbxProject_Number.AutoSize = true;
+            this.cbxProject_Number.Location = new System.Drawing.Point(294, 29);
+            this.cbxProject_Number.Name = "cbxProject_Number";
+            this.cbxProject_Number.Size = new System.Drawing.Size(111, 24);
+            this.cbxProject_Number.TabIndex = 41;
+            this.cbxProject_Number.Text = "By Number";
+            this.cbxProject_Number.UseVisualStyleBackColor = true;
+            this.cbxProject_Number.Click += new System.EventHandler(this.CheckBox_Click);
             // 
             // cmbAgent
             // 
@@ -364,7 +366,7 @@
             // cbxOpen
             // 
             this.cbxOpen.AutoSize = true;
-            this.cbxOpen.Location = new System.Drawing.Point(294, 29);
+            this.cbxOpen.Location = new System.Drawing.Point(439, 29);
             this.cbxOpen.Name = "cbxOpen";
             this.cbxOpen.Size = new System.Drawing.Size(152, 24);
             this.cbxOpen.TabIndex = 4;
@@ -375,7 +377,7 @@
             // cbxDate
             // 
             this.cbxDate.AutoSize = true;
-            this.cbxDate.Location = new System.Drawing.Point(163, 29);
+            this.cbxDate.Location = new System.Drawing.Point(122, 29);
             this.cbxDate.Name = "cbxDate";
             this.cbxDate.Size = new System.Drawing.Size(88, 24);
             this.cbxDate.TabIndex = 2;
@@ -386,7 +388,7 @@
             // cbxClient
             // 
             this.cbxClient.AutoSize = true;
-            this.cbxClient.Location = new System.Drawing.Point(38, 29);
+            this.cbxClient.Location = new System.Drawing.Point(19, 29);
             this.cbxClient.Name = "cbxClient";
             this.cbxClient.Size = new System.Drawing.Size(96, 24);
             this.cbxClient.TabIndex = 2;
@@ -460,12 +462,12 @@
             // 
             // dgvDisplay
             // 
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.dgvDisplay.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.dgvDisplay.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dgvDisplay.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvDisplay.Location = new System.Drawing.Point(6, 19);
+            this.dgvDisplay.Location = new System.Drawing.Point(6, 29);
             this.dgvDisplay.Name = "dgvDisplay";
-            this.dgvDisplay.Size = new System.Drawing.Size(494, 231);
+            this.dgvDisplay.Size = new System.Drawing.Size(494, 331);
             this.dgvDisplay.TabIndex = 26;
             this.dgvDisplay.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDisplay_CellContentClick);
             this.dgvDisplay.RowEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDisplay_RowEnter);
@@ -475,7 +477,7 @@
             this.gbxDisplay.Controls.Add(this.dgvDisplay);
             this.gbxDisplay.Location = new System.Drawing.Point(613, 95);
             this.gbxDisplay.Name = "gbxDisplay";
-            this.gbxDisplay.Size = new System.Drawing.Size(506, 277);
+            this.gbxDisplay.Size = new System.Drawing.Size(506, 378);
             this.gbxDisplay.TabIndex = 4;
             this.gbxDisplay.TabStop = false;
             this.gbxDisplay.Text = "Results";
@@ -488,7 +490,7 @@
             this.gbxDataControls.Controls.Add(this.btnEdit);
             this.gbxDataControls.Controls.Add(this.btnNew);
             this.gbxDataControls.Font = new System.Drawing.Font("Lucida Bright", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.gbxDataControls.Location = new System.Drawing.Point(631, 469);
+            this.gbxDataControls.Location = new System.Drawing.Point(630, 558);
             this.gbxDataControls.Name = "gbxDataControls";
             this.gbxDataControls.Size = new System.Drawing.Size(452, 65);
             this.gbxDataControls.TabIndex = 3;
@@ -556,7 +558,7 @@
             this.gbxNavControls.Controls.Add(this.btnNext);
             this.gbxNavControls.Controls.Add(this.btnPrev);
             this.gbxNavControls.Controls.Add(this.btnBeg);
-            this.gbxNavControls.Location = new System.Drawing.Point(631, 390);
+            this.gbxNavControls.Location = new System.Drawing.Point(630, 479);
             this.gbxNavControls.Name = "gbxNavControls";
             this.gbxNavControls.Size = new System.Drawing.Size(452, 56);
             this.gbxNavControls.TabIndex = 2;
@@ -660,7 +662,7 @@
         private System.Windows.Forms.Label lblDateInitiated;
         private System.Windows.Forms.DateTimePicker dtpDate_Initiated;
         private System.Windows.Forms.Label lblProjectNotes;
-        private System.Windows.Forms.TextBox txtProject;
+        private System.Windows.Forms.TextBox txtProject_Notes;
         private System.Windows.Forms.ComboBox cmbProject_Type;
         private System.Windows.Forms.GroupBox gbxBill_Client;
         private System.Windows.Forms.TextBox txtBill_Cust;
@@ -696,8 +698,8 @@
         private System.Windows.Forms.CheckBox cbxIs_Reported;
         private System.Windows.Forms.ComboBox cmbAgent;
         private System.Windows.Forms.Label lblPosition;
-        private System.Windows.Forms.CheckBox cbxNumber;
-        private System.Windows.Forms.TextBox txtNumber;
+        private System.Windows.Forms.CheckBox cbxProject_Number;
+        private System.Windows.Forms.TextBox txtProject_Number;
         private System.Windows.Forms.Button btnSearch;
     }
 }
